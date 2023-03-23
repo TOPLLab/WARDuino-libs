@@ -21,19 +21,23 @@
 //!
 //!pub fn main() {
 //!    let led = 2;
-//!    pin_mode(led, OUTPUT);
+//!    pin_mode(led, PinMode::OUTPUT);
 //!
 //!    let pause = 1000;
 //!    loop {
-//!        digital_write(led, HIGH);
+//!        digital_write(led, PinVoltage::HIGH);
 //!        delay(pause);
-//!        digital_write(led, LOW);
+//!        digital_write(led, PinVoltage::LOW);
 //!        delay(pause);
 //!    }
 //!}
 //! ```
 
 #![crate_name = "warduino"]
+
+extern crate num;
+#[macro_use]
+extern crate num_derive;
 
 use std::mem;
 
@@ -66,7 +70,6 @@ extern {
                                                  authorization: *const u8, authorization_len: usize,
                                                  buffer: *const u8, buffer_size: usize)
                                            -> i32;
-    
 
     // Interrupts
     #[link_name = "subscribe_interrupt"]  fn _sub_interrupt(pin: u32, f: fn(&str, &str, u32), mode: u32);
@@ -100,35 +103,47 @@ fn size_of_post_options(options: &PostOptions) -> usize {
     options.uri.len() + options.body.len() + options.headers.content_type.len()
 }
 
-/// LOW voltage on a digital I/O pin
-pub static LOW     : u32 = 0x0;
-/// HIGH voltage on a digital I/O pin
-pub static HIGH    : u32 = 0x1;
+/// The voltage of a digital pin.
+#[derive(FromPrimitive)]
+pub enum PinVoltage {
+    /// Low voltage on a digital I/O pin
+    LOW  = 0x0,
+    /// High voltage on a digital I/O pin
+    HIGH = 0x1,
+}
 
-/// CHANGING edge on a digital I/O pin
-pub static CHANGE  : u32 = 1;
-/// FALLING edge on a digital I/O pin
-pub static FALLING : u32 = 2;
-/// RISING edge on a digital I/O pin
-pub static RISING  : u32 = 3;
+/// The mode of a pin interrupt.
+#[derive(FromPrimitive)]
+pub enum InterruptMode {
+    /// Changing edge on a digital I/O pin
+    CHANGE  = 1,
+    /// Falling edge on a digital I/O pin
+    FALLING = 2,
+    /// Rising edge on a digital I/O pin
+    RISING  = 3,
+}
 
-/// Input mode for digital pins
-pub static INPUT   : u32 = 0x0;
-/// Output mode for digital pins
-pub static OUTPUT  : u32 = 0x2;
+/// The mode of a digital I/O pin.
+#[derive(FromPrimitive)]
+pub enum PinMode {
+    /// Input mode for digital pins
+    INPUT  = 0x0,
+    /// Output mode for digital pins
+    OUTPUT = 0x2,
+}
 
 /// Returns the number of milliseconds passed since the current program started to run.
-pub fn millis       () -> u32               { unsafe { _millis() } }
+pub fn millis       () -> u32                      { unsafe { _millis() } }
 /// Pauses the program for the amount of time (in milliseconds).
-pub fn delay        (ms: u32)               { unsafe { _delay(ms); } }
-/// Configures the specified pin to behave either as an [INPUT] or an [OUTPUT].
-pub fn pin_mode     (pin: u32, mode: u32)   { unsafe { _pinMode(pin, mode) } }
-/// Write the value to a specified digital pin, either [HIGH] or [LOW].
-pub fn digital_write(pin: u32, value: u32)  { unsafe { _digitalWrite(pin, value) } }
-/// Reads the value from a specified digital pin, either [HIGH] or [LOW].
-pub fn digital_read (pin: u32) -> u32       { unsafe { _digitalRead(pin) } }
+pub fn delay        (ms: u32)                      { unsafe { _delay(ms); } }
+/// Configures the [PinMode] of the specified pin.
+pub fn pin_mode     (pin: u32, mode: PinMode)      { unsafe { _pinMode(pin, mode as u32) } }
+/// Write the voltage to a specified digital pin, either [HIGH](PinVoltage) or [LOW](PinVoltage).
+pub fn digital_write(pin: u32, value: PinVoltage)  { unsafe { _digitalWrite(pin, value as u32) } }
+/// Reads the value from a specified digital pin, either [HIGH](PinVoltage) or [LOW](PinVoltage).
+pub fn digital_read (pin: u32) -> PinVoltage       { unsafe { num::FromPrimitive::from_u32(_digitalRead(pin)).unwrap() } }
 /// Reads the value from the specified analog pin.
-pub fn analog_read  (pin: u32) -> i32       { unsafe { _analogRead(pin) } }
+pub fn analog_read  (pin: u32) -> i32              { unsafe { _analogRead(pin) } }
 
 /// Connect to Wi-Fi network with SSID and password
 pub fn wifi_connect (ssid: &str, password: &str)            { unsafe { _connect(ssid, password) } }
@@ -158,7 +173,7 @@ pub fn print        (text: &[u8])   { unsafe { _print_buffer(text.as_ptr(), text
 pub fn print_int    (integer: i32)  { unsafe { _print_int(integer) } }
 
 /// subscribe a callback function to an interrupt on the given pin
-pub fn sub_interrupt    (pin: u32, f: fn(&str, &str, u32), mode: u32)    { unsafe { _sub_interrupt(pin, f, mode) } }
+pub fn sub_interrupt    (pin: u32, f: fn(&str, &str, u32), mode: InterruptMode)    { unsafe { _sub_interrupt(pin, f, mode as u32) } }
 /// Unsubscribe all callback functions for a given pin
 pub fn unsub_interrupt    (pin: u32)    { unsafe { _unsub_interrupt(pin) } }
 
