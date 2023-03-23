@@ -1,6 +1,6 @@
 <div align="center">
 
-<h1>rs-warduino</h1>
+<h1>warduino</h1>
 
 <p><strong>Crate for accessing WARDuino primitives in Rust.</strong></p>
 
@@ -8,16 +8,18 @@
 
 ## Features
 
-+ basic I/O constants
-+ time primitives
-+ serial primitives
-+ digital I/O primitives
-+ Wi-Fi primitives
-+ HTTP primitives with simple structs for options
-+ interrupt primitives
-+ MQTT primitives
++ Access WARDuino primitives from Rust
++ Use Rust types and structs for arguments
 
 ## Installation
 
-This package requires **WARDuino 0.2.3+**.
+Add the following to your Cargo.toml:
+
+```toml
+[dependencies]
+warduino = "0.1.0"
+```
+
+## Usage
+
 

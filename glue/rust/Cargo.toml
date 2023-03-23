@@ -1,5 +1,5 @@
 [package]
-name = "rs-warduino"
+name = "warduino"
 version = "0.1.0"
 authors = ["Tom Lauwaerts <tom.lauwaerts@ugent.be>"]
 description = "Library for WARDuino primitives"
