@@ -6,3 +6,7 @@ This repository includes software tools for the WARDuino virtual machine.
 
 This platform allows developers to communicate with a WARDuino instance from Typescript.
 
+## Glue code libraries
+
+Libraries to more easily access the WARDuino primitives from several high-level languages.
+
