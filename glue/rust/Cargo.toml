@@ -1,0 +1,16 @@
+[package]
+name = "rs-warduino"
+version = "0.1.0"
+authors = ["Tom Lauwaerts <tom.lauwaerts@ugent.be>"]
+description = "Library for WARDuino primitives"
+edition = "2018"
+include = [
+    "Cargo.toml",
+    "LICENSE",
+    "/README.md",
+    "/src/**"
+]
+keywords = ["warduino", "wasm"]
+license = "MPL-2.0"
+
+[dependencies]
