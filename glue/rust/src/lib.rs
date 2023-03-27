@@ -17,20 +17,20 @@
 //! ```
 //!
 //! ```rust
-//!use warduino::*;
+//! use warduino::{PinMode, PinVoltage, pin_mode, digital_write, delay};
 //!
-//!pub fn main() {
-//!    let led = 2;
-//!    pin_mode(led, PinMode::OUTPUT);
+//! pub fn main() {
+//!     let led = 2;
+//!     pin_mode(led, PinMode::OUTPUT);
 //!
-//!    let pause = 1000;
-//!    loop {
-//!        digital_write(led, PinVoltage::HIGH);
-//!        delay(pause);
-//!        digital_write(led, PinVoltage::LOW);
-//!        delay(pause);
-//!    }
-//!}
+//!     let pause = 1000;
+//!     loop {
+//!         digital_write(led, PinVoltage::HIGH);
+//!         delay(pause);
+//!         digital_write(led, PinVoltage::LOW);
+//!         delay(pause);
+//!     }
+//! }
 //! ```
 
 #![crate_name = "warduino"]

@@ -22,4 +22,20 @@ warduino = "0.1.0"
 
 ## Usage
 
+```rust
+use warduino::{PinMode, PinVoltage, pin_mode, digital_write, delay};
+
+pub fn main() {
+    let led = 2;
+    pin_mode(led, PinMode::OUTPUT);
+
+    let pause = 1000;
+    loop {
+        digital_write(led, PinVoltage::HIGH);
+        delay(pause);
+        digital_write(led, PinVoltage::LOW);
+        delay(pause);
+    }
+}
+```
 
