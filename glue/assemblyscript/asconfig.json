@@ -1,16 +1,18 @@
 {
+  "entries": [
+    "src/index.ts",
+    "src/warduino.ts"
+  ],
   "targets": {
     "debug": {
       "sourceMap": true,
       "debug": true,
-      "runtime": "incremental",
       "exportRuntime": true
     },
     "release": {
       "sourceMap": true,
       "optimizeLevel": 3,
       "shrinkLevel": 0,
-      "runtime": "incremental",
       "exportRuntime": true,
       "converge": false,
       "noAssert": false

@@ -18,6 +18,9 @@
   ],
   "scripts": {
     "build": "echo 'no build in as-warduino package'",
-    "prepublishOnly": "echo 'nothing to do'"
+    "prepublishOnly": "asc src/index.ts --target release --textFile=index.wast"
+  },
+  "devDependencies": {
+    "assemblyscript": "latest"
   }
 }

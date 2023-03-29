@@ -34,21 +34,21 @@ import * as ward from "./warduino";
 
 /** Returns the number of milliseconds passed since the current program started to run. */
 export function millis(): u32 {
-    return ward.millis();
+    return ward._millis();
 }
 /** Pauses the program for the amount of time (in milliseconds). */
 export function delay(ms: u32): void {
-    ward.delay(ms);
+    ward._delay(ms);
 }
 
 /** Pauses the program for the amount of time (in seconds). */
 export function sleep(s: u32): void {
-    ward.delay(s * 1000);
+    ward._delay(s * 1000);
 }
 
 /** Reads the value from the specified analog pin. */
 export function analog_read(pin: u32): i32 {
-    return ward.analog_read(pin);
+    return ward._analog_read(pin);
 }
 
 /** The voltage of a digital pin. */
@@ -94,7 +94,7 @@ export function digitalRead(pin: u32): PinVoltage {
 
 /** Subscribe a callback function to an interrupt on the given pin. */
 export function interruptOn(pin: u32, mode: InterruptMode, fn: () => void): void {
-    ward.subscribe_interrupt(pin, fn, mode);
+    ward._subscribe_interrupt(pin, fn, mode);
 }
 
 /** Print a string to the serial port. */
@@ -111,7 +111,12 @@ export namespace WiFi {
 
     /** Returns the status of the Wi-Fi connection of the board. */
     function status(): i32 {
-        return wifi_status();
+        return ward._wifi_status();
+    }
+
+    /** Returns whether the board si still connected to Wi-Fi. */
+    function connected(): bool {
+        return ward._wifi_status() === 3;
     }
 
     /** Returns the local IP address of the board. */
@@ -140,7 +145,7 @@ export namespace MQTT {
 
     /** Returns the status of the connection to the MQTT broker. */
     function  state(): i32 {
-        return ward.mqtt_state();
+        return ward._mqtt_state();
     }
 
     /** Publish a message on an MQTT topic. */
@@ -150,17 +155,17 @@ export namespace MQTT {
 
     /** Subscribe a callback function to an MQTT topic. */
     function  subscribe(topic: string, fn: (topic: string, payload: string) => void): i32 {
-        return ward.mqtt_subscribe(topic, fn);
+        return ward._mqtt_subscribe(topic, fn);
     }
 
     /** Unsubscribe a callback function from an MQTT topic. */
     function  unsubscribe(topic: string, fn: (topic: string, payload: string) => void): i32 {
-        return ward.mqtt_unsubscribe(topic, fn);
+        return ward._mqtt_unsubscribe(topic, fn);
     }
 
     /**  Check for messages from the MQTT broker. */
     function  loop(): i32 {
-        return mqtt_loop();
+        return ward._mqtt_loop();
     }
 }
 
