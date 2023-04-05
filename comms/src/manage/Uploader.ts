@@ -5,7 +5,7 @@ import {SerialPortOpenOptions} from 'serialport/dist/serialport';
 import * as fs from 'fs';
 import * as path from 'path';
 
-abstract class Uploader {
+export abstract class Uploader {
     abstract upload(program: string): Promise<Duplex>;
 
     protected removeTmpDir(tmpdir: string): Promise<void> {

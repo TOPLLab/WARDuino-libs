@@ -1,0 +1,31 @@
+{
+  "name": "warduino-comms",
+  "version": "0.1.0",
+  "description": "Communication platform for WARDuino",
+  "main": "src/index.ts",
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": ""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TOPLLab/WARDuino-sdk.git#main"
+  },
+  "keywords": [
+    "arduino",
+    "esp32",
+    "warduino",
+    "webassembly"
+  ],
+  "author": "Team WARDuino <warduino@ugent.be>",
+  "license": "MPL-2.0",
+  "bugs": {
+    "url": "https://github.com/TOPLLab/WARDuino-sdk/issues"
+  },
+  "homepage": "https://github.com/TOPLLab/WARDuino-sdk/tree/main#readme",
+  "dependencies": {
+    "ieee754": "^1.2.1",
+    "serialport": "^10.5.0",
+    "typescript": "latest"
+  }
+}

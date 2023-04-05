@@ -1,10 +1,8 @@
-import {SourceMap} from '../../../State/SourceMap';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import {exec, ExecException} from 'child_process';
-import {parseExport} from '../Parsers';
-import {getFileExtension} from '../../../Parsers/ParseUtils';
+import {SourceMap} from '../sourcemap/SourceMap';
 
 export interface CompileOutput {
     file: string; // the compiled file
@@ -37,7 +35,7 @@ export abstract class Compiler {
     abstract compile(program: string): Promise<CompileOutput>;
 
     // generates a sourceMap
-    abstract map(program: string): Promise<SourceMap>;
+    abstract map(program: string): Promise<SourceMap.Mapping>;
 
     protected makeTmpDir(): Promise<string> {
         return new Promise((resolve, reject) => {
@@ -106,9 +104,9 @@ export class WatCompiler extends Compiler {
 
     }
 
-    private dump(output: CompileOutput): Promise<SourceMap> {
+    private dump(output: CompileOutput): Promise<SourceMap.Mapping> {
         // object dump
-        return new Promise<SourceMap>((resolve, reject) => {
+        return new Promise<SourceMap.Mapping>((resolve, reject) => {
             const command = `${this.wabt}/wasm-objdump -x -m ${output.file}`;
 
             let compile = exec(command, (error: ExecException | null, stdout: String, stderr: any) => {
@@ -124,14 +122,14 @@ export class WatCompiler extends Compiler {
         });
     }
 
-    public async map(program: string): Promise<SourceMap> {
+    public async map(program: string): Promise<SourceMap.Mapping> {
         return this.compile(program).then((output) => {
             return this.dump(output);
         });
     }
 
-    private parseWasmObjDump(context: CompileOutput, input: string): SourceMap {
-        return {lineInfoPairs: [], functionInfos: parseExport(input), globalInfos: [], importInfos: []};
+    private parseWasmObjDump(context: CompileOutput, input: string): SourceMap.Mapping {
+        return {lines: [], functions: parseExport(input), globals: [], imports: []};
     }
 
 }
@@ -153,10 +151,52 @@ export class AsScriptCompiler extends Compiler {
         return {file: this.compiled};
     }
 
-    public async map(program: string): Promise<SourceMap> {
+    public async map(program: string): Promise<SourceMap.Mapping> {
         // TODO implement
         await this.compile(program);
         // ...
-        return Promise.resolve({lineInfoPairs: [], functionInfos: [], globalInfos: [], importInfos: []});
+        return Promise.resolve({lines: [], functions: [], globals: [], imports: []});
     }
+}
+
+function getFileExtension(file: string): string {
+    let splitted = file.split('.');
+    if (splitted.length === 2) {
+        return splitted.pop()!;
+    }
+    throw Error("Could not determine file type");
+}
+
+export function parseExport(input: string): SourceMap.Closure[] {
+    const results: SourceMap.Closure[] = [];
+    const section: string[] = consumeUntil(input, 'Export').split('\n');
+    section.pop();
+    for (const line of section) {
+        const index: number = getIndex(line);
+        const name: string = getName(line);
+        if (0 <= index && 0 < name.length) {
+            results.push({index: index, name: name, arguments: [], locals: []});
+        }
+    }
+    return results;
+}
+
+function consumeUntil(text: string, until: string): string {
+    return text.split(until)[1] ?? '';
+}
+
+function getIndex(line: string): number {
+    return parseInt(find(/func\[([0-9]+)\]/, line));
+}
+
+function getName(line: string): string {
+    return find(/-> "([^"]+)"/, line);
+}
+
+export function find(regex: RegExp, input: string) {
+    const match = regex.exec(input);
+    if (match === null || match[1] === undefined) {
+        return '';
+    }
+    return match[1];
 }
