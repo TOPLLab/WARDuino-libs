@@ -2,10 +2,23 @@
   "name": "warduino-comms",
   "version": "0.1.0",
   "description": "Communication platform for WARDuino",
-  "main": "src/index.ts",
+  "type": "module",
+  "exports": {
+    "types": "./dist/types/index.d.ts",
+    "import": "./dist/esm/index.js",
+    "require": "./dist/cjs/index.cjs"
+  },
+  "main": "dist/cjs/index.cjs",
+  "types": "dist/types/index.d.ts",
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "build": "tsc",
-    "prepublishOnly": ""
+    "build": "npm run clean && npm run build:cjs && npm run build:esm",
+    "build:cjs": "tsc --project tsconfig.build.json --module commonjs --outDir dist/cjs && npx convert-extension cjs dist/cjs/ && rm dist/cjs/*.map",
+    "build:esm": "tsc --project tsconfig.build.json --module es6 --outDir dist/esm",
+    "clean": "rm -rf dist",
+    "prepublish": "npm run build"
   },
   "repository": {
     "type": "git",
@@ -27,5 +40,8 @@
     "ieee754": "^1.2.1",
     "serialport": "^10.5.0",
     "typescript": "latest"
+  },
+  "devDependencies": {
+    "convert-extension": "^0.3.0"
   }
 }

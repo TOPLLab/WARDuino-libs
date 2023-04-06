@@ -1,7 +1,6 @@
 import {Duplex} from 'stream';
 import {exec} from 'child_process';
-import {SerialPort} from 'serialport';
-import {SerialPortOpenOptions} from 'serialport/dist/serialport';
+import {SerialPort, SerialPortOpenOptions} from 'serialport';
 import * as fs from 'fs';
 import * as path from 'path';
 
