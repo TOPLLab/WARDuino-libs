@@ -1,0 +1,24 @@
+{
+  "name": "example",
+  "version": "0.1.0",
+  "description": "example usecase",
+  "main": "index.ts",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bandersnatch": "^1.12.1",
+    "ora": "^6.3.0",
+    "ts-wcwidth": "^2.0.3",
+    "warduino-comms": "file:./warduino-comms-0.1.0.tgz",
+    "wcwidth": "^1.0.1"
+  },
+  "devDependencies": {
+    "ts-node": "^10.9.1",
+    "typescript": "latest"
+  }
+}
