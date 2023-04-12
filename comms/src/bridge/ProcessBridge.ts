@@ -1,5 +1,38 @@
 import {Duplex} from 'stream';
 import {Instance} from './Instance';
+import {Instruction} from '../debug/Instructions';
+import {defaultParser, parserTable, State} from '../parse/Parsers';
+import {MessageQueue} from '../parse/MessageQueue';
+
+class Sender<R extends Object> {
+    private readonly instruction: Instruction;
+    private parser: (input: string) => R;
+
+    constructor(instruction: Instruction, parser: (input: string) => R) {
+        this.instruction = instruction;
+        this.parser = parser;
+    }
+
+    public sendInstruction(socket: Duplex, payload?: string): Promise<R> {
+        const stack: MessageQueue<R> = new MessageQueue<R>('\n', this.parser);
+
+        return new Promise((resolve) => {  // TODO add reject
+            socket.on('data', (data: Buffer) => {
+                stack.push(data.toString());
+                stack.tryParser(resolve);
+            });
+
+            socket.write(`${this.instruction}${payload ?? ''}\n`);
+        });
+    }
+}
+
+
+export const instructionTable: Map<Instruction, Sender<any>> = new Map([
+    [Instruction.dump, new Sender<State>(Instruction.dump, parserTable.get(Instruction.dump) ?? defaultParser)]
+])
+
+// instructionTable.get(Instruction.dump)!.sendInstruction(socket, `payload`): Promise<State>;
 
 export abstract class PlatformBridge {
     // Timeouts for async actions
@@ -19,7 +52,7 @@ export abstract class PlatformBridge {
     abstract connect(program: string, args: string[]): Promise<Instance>;
 
     // Send an instruction of over a socket
-    abstract sendInstruction(socket: Duplex, chunk: any, expectResponse: boolean, parser: (text: string) => Object): Promise<Object | void>;
+    abstract sendInstruction(socket: Duplex, payload: any): Promise<Object | void>;
 
     // Change the program of an instance
     abstract setProgram(socket: Duplex, program: string): Promise<boolean>;

@@ -16,10 +16,16 @@ export const parserTable: Map<Instruction, (input: string) => Object> = new Map(
     [Instruction.reset, resetParser],
 ]);
 
-function stateParser(text: string): Object {
-    const message = JSON.parse(text);
-    message['pc'] = parseInt(message['pc']);
-    return message;
+export interface State {
+    pc: number;
+}
+
+function stateParser(text: string): State {
+    return JSON.parse(text);
+}
+
+export function defaultParser(text: string): any {
+    return JSON.parse(text);
 }
 
 function resetParser(text: string): Object {
