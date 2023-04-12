@@ -5,10 +5,13 @@ export enum Instruction {
     step = '04',
     addBreakpoint = '06',
     removeBreakpoint = '07',
+    inspect = '09',
     dump = '10',
     dumpLocals = '11',
     dumpAll = '12',
     reset = '13',
+    updateStackValue = '14',
+    updateGlobal= '15',
     updateFunction = '20',
     updateModule = '22',
     invoke = '40',
@@ -27,3 +30,6 @@ export enum Instruction {
     dumpCallbackmapping = '74',
     updateCallbackmapping = '75'
 }
+
+// TODO add interfaces return/acknowledgements (see branch carlos)
+
