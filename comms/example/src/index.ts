@@ -1,13 +1,23 @@
 import {command, program, Program} from 'bandersnatch';
-import ora, {oraPromise} from 'ora';
-import {ArduinoUploader, CompileOutput, CompilerFactory, EmulatorUploader, Uploader} from 'warduino-comms';
+import {oraPromise} from 'ora';
+import {
+    ArduinoUploader,
+    CompileOutput,
+    CompilerFactory,
+    EmulatorUploader,
+    Instance,
+    Instruction,
+    instructionTable,
+    State,
+    Uploader
+} from 'warduino-comms';
 
 import {homedir} from 'os';
 
 const EMULATOR: string = `${homedir()}/Arduino/libraries/WARDuino/build-emu/wdcli`;
 const ARDUINO: string = `${homedir()}/Arduino/libraries/WARDuino/platforms/Arduino/`;
 
-let CONNECTED: boolean = false;
+const connections: Instance[] = [];
 
 enum Platform {
     emulated,
@@ -19,41 +29,58 @@ const platformMap: Map<string, Platform> = new Map<string, Platform>([
     ['arduino', Platform.arduino],
 ])
 
-const repl: Program = program().add(
-    command('connect')
-        .description('Start and connect')
-        .option("program", {
-            description: "WebAssembly program (.wat)",
-            default: 'upload.wat',
-            required: true,
-            prompt: "WAT program file",
-        })
-        .option('platform', {
-            description: 'Target platform',
-            default: 'emulated',
-            choices: ['emulated', 'arduino'],
-            required: true,
-            prompt: 'Target platform',
-        })
-        .option("port", {
-            description: "Port address",
-            default: '/dev/ttyUSB0',
-            required: true,
-            prompt: "Port address",
-        })
-        .action(async (args) => {
-            if (connected()) {
-                ora().warn('Already connected.');
-                return;
-            }
-
-            await connect(args.program, args.port, platformMap.get(args.platform) ?? Platform.emulated)
-        })
-);
+const repl: Program = program({exit: false})
+    .add(
+        command('spawn')
+            .description('Start and connect')
+            .option('program', {
+                description: 'WebAssembly program (.wat)',
+                default: 'upload.wat',
+                required: true,
+                prompt: 'WAT program file',
+            })
+            .option('platform', {
+                description: 'Target platform',
+                default: 'emulated',
+                choices: ['emulated', 'arduino'],
+                required: true,
+                prompt: 'Target platform',
+            })
+            .option('port', {
+                description: 'Port address',
+                default: '/dev/ttyUSB0',
+                required: true,
+                prompt: 'Port address',
+            })
+            .action(async (args) => {
+                connections.push(await connect(args.program, args.port, platformMap.get(args.platform) ?? Platform.emulated));
+            })
+    ).add(
+        command('list')
+            .description('List connections')
+            .action(async () => {
+                console.log(connections);
+            })
+    ).add(
+        command('inspect')
+            .description('Inspect state')
+            .action(async () => {
+                const response: State = await instructionTable.get(Instruction.dump)!.sendInstruction(connections[0].interface);
+                console.log(response);
+            })
+    ).add(
+        command('exit')
+            .description('Exit the REPL')
+            .action(async () => {
+                console.log('shutting down connections');
+                connections.forEach((connection) => connection.kill());
+                process.exit(0);
+            })
+    );
 
 repl.repl();
 
-async function connect(program: string, port: string, platform: Platform) {
+async function connect(program: string, port: string, platform: Platform): Promise<Instance> {
     // compile program
     const output: CompileOutput = await oraPromise(new CompilerFactory(process.env.WABT ?? '')
         .pickCompiler(program)
@@ -63,22 +90,17 @@ async function connect(program: string, port: string, platform: Platform) {
         failText: 'Failed to compile program.'
     });
 
-    const connection = await oraPromise(new UploaderFactory(EMULATOR, ARDUINO).pickUploader(platform, port).upload(output.file), {
+    return oraPromise(new UploaderFactory(EMULATOR, ARDUINO).pickUploader(platform, port).upload(output.file), {
         text: `Uploading to ${port} ...`,
         successText: `Uploaded with Arduino.`,
         failText: 'Failed to upload with Arduino.'
     });
-
-    CONNECTED = true;
-}
-
-function connected(): boolean {
-    return CONNECTED;
 }
 
 export class UploaderFactory {
     private readonly emulator: string;
     private readonly arduino: string;
+
     constructor(emulator: string, arduino: string) {
         this.emulator = emulator;
         this.arduino = arduino;

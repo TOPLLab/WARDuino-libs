@@ -4,6 +4,7 @@ import {SerialPort} from 'serialport';
 
 export interface Instance {
     interface: Duplex;
+    kill: () => boolean;
 }
 
 export interface SerialInstance extends Instance {
