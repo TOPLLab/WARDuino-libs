@@ -88,7 +88,12 @@ export class EmulatorUploader extends Uploader {
                             if (listener !== undefined) {
                                 client.on('data', listener);
                             }
-                            resolve({process: process, interface: client});
+                            resolve({
+                                process: process, interface: client, kill: () => {
+                                    client.destroy();
+                                    return process.kill();
+                                }
+                            });
                         });
                     } else {
                         error = data.toString();
@@ -191,7 +196,12 @@ export class ArduinoUploader extends Uploader {
             connection.on('data', function (data) {
                 if (data.includes('LOADED')) {
                     connection.removeAllListeners('data');
-                    resolve({interface: connection});
+                    resolve({
+                        interface: connection, kill: () => {
+                            connection.destroy();
+                            return connection.destroyed;
+                        }
+                    });
                 }
             });
         });
