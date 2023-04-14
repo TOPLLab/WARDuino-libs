@@ -42,6 +42,7 @@
     "typescript": "latest"
   },
   "devDependencies": {
+    "@types/node": "^18.15.11",
     "convert-extension": "^0.3.0"
   }
 }
