@@ -1,8 +1,8 @@
-import {Duplex} from 'stream';
-import {Instance} from './Instance';
-import {Instruction} from '../debug/Instructions';
-import {defaultParser, parserTable, State} from '../parse/Parsers';
-import {MessageQueue} from '../parse/MessageQueue';
+import { Duplex } from 'stream';
+import { Instance } from './Instance';
+import { Instruction } from '../debug/Instructions';
+import { defaultParser, parserTable, State } from '../parse/Parsers';
+import { MessageQueue } from '../parse/MessageQueue';
 
 class Sender<R extends Object> {
     private readonly instruction: Instruction;
@@ -14,12 +14,12 @@ class Sender<R extends Object> {
     }
 
     public sendInstruction(socket: Duplex, payload?: string): Promise<R> {
-        const stack: MessageQueue<R> = new MessageQueue<R>('\n', this.parser);
+        const messagesHandler: MessageQueue<R> = new MessageQueue<R>('\n', this.parser);
 
         return new Promise((resolve) => {  // TODO add reject
             socket.on('data', (data: Buffer) => {
-                stack.push(data.toString());
-                stack.tryParser(resolve);
+                messagesHandler.push(data.toString());
+                messagesHandler.tryParser(resolve);
             });
 
             socket.write(`${this.instruction}${payload ?? ''}\n`);
