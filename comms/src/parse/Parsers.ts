@@ -1,26 +1,8 @@
-import {Instruction} from '../debug/Instructions';
 import {WASM} from '../sourcemap/Wasm';
 import * as ieee754 from 'ieee754';
+import {State} from './Requests';
 
-export const parserTable: Map<Instruction, (input: string) => Object> = new Map([
-    [Instruction.run, stateParser],
-    [Instruction.pause, stateParser],
-    [Instruction.step, stateParser],
-    [Instruction.dump, stateParser],
-    [Instruction.dumpLocals, stateParser],
-    [Instruction.dumpAll, stateParser],
-    [Instruction.dumpEvents, stateParser],
-    [Instruction.dumpCallbackmapping, stateParser],
-    [Instruction.pushEvent, stateParser],
-    [Instruction.invoke, returnParser],
-    [Instruction.reset, resetParser],
-]);
-
-export interface State {
-    pc: number;
-}
-
-function stateParser(text: string): State {
+export function stateParser(text: string): State {
     return JSON.parse(text);
 }
 
