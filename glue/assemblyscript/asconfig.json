@@ -10,12 +10,20 @@
       "exportRuntime": true
     },
     "release": {
-      "sourceMap": true,
+      "sourceMap": false,
       "optimizeLevel": 3,
-      "shrinkLevel": 0,
-      "exportRuntime": true,
-      "converge": false,
-      "noAssert": false
+      "shrinkLevel": 2,
+      "exportRuntime": false,
+      "runtime": "stub",
+      "converge": true,
+      "noAssert": false,
+      "maximumMemory": 2,
+      "disable": [
+          "mutable-globals",
+          "sign-extension",
+          "nontrapping-f2i",
+          "bulk-memory"
+      ]
     }
   },
   "options": {}
