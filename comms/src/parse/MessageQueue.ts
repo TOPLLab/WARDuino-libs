@@ -1,12 +1,10 @@
-export class MessageQueue<R extends Object> {
+export class MessageQueue implements Iterable<string> {
     private readonly delimiter: string;
-    private readonly parser: (text: string) => R;
     private stack: string[];
 
-    constructor(delimiter: string, parser: (text: string) => R) {
+    constructor(delimiter: string) {
         this.delimiter = delimiter;
         this.stack = [];
-        this.parser = parser;
     }
 
     public push(data: string): void {
@@ -23,20 +21,6 @@ export class MessageQueue<R extends Object> {
         }
     }
 
-    public tryParser(resolver: (value: R | PromiseLike<R>) => void): void {
-        let message = this.pop();
-        while (message !== undefined) {
-            try {
-                const parsed = this.parser(message);
-                resolver(parsed);
-            } catch (e) {
-                // do nothing
-            } finally {
-                message = this.pop();
-            }
-        }
-    }
-
     private split(text: string): string[] {
         return text.split(new RegExp(`(.*?${this.delimiter})`, 'g')).filter(s => {
             return s.length > 0;
@@ -49,6 +33,17 @@ export class MessageQueue<R extends Object> {
     }
 
     private hasCompleteMessage(): boolean {
-        return !this.lastMessageIncomplete() || this.stack.length > 1;
+        return this.stack.length > 0 && (!this.lastMessageIncomplete() || this.stack.length > 1);
+    }
+
+    [Symbol.iterator](): Iterator<string> {
+        return {
+            next: (): IteratorResult<string> => {
+                return {
+                    done: !this.hasCompleteMessage(),
+                    value: this.pop()!
+                }
+            }
+        };
     }
 }
