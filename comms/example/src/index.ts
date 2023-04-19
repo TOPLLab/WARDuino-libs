@@ -4,10 +4,9 @@ import {
     ArduinoUploader,
     CompileOutput,
     CompilerFactory,
+    Connection,
     EmulatorUploader,
-    Instance,
-    Instruction,
-    instructionTable,
+    Request,
     State,
     Uploader
 } from 'warduino-comms';
@@ -17,7 +16,7 @@ import {homedir} from 'os';
 const EMULATOR: string = `${homedir()}/Arduino/libraries/WARDuino/build-emu/wdcli`;
 const ARDUINO: string = `${homedir()}/Arduino/libraries/WARDuino/platforms/Arduino/`;
 
-const connections: Instance[] = [];
+const connections: Connection[] = [];
 
 enum Platform {
     emulated,
@@ -35,7 +34,7 @@ const repl: Program = program({exit: false})
             .description('Start and connect')
             .option('program', {
                 description: 'WebAssembly program (.wat)',
-                default: 'upload.wat',
+                default: 'blink.wat',
                 required: true,
                 prompt: 'WAT program file',
             })
@@ -48,7 +47,7 @@ const repl: Program = program({exit: false})
             })
             .option('port', {
                 description: 'Port address',
-                default: '/dev/ttyUSB0',
+                default: '8900',
                 required: true,
                 prompt: 'Port address',
             })
@@ -65,8 +64,8 @@ const repl: Program = program({exit: false})
         command('inspect')
             .description('Inspect state')
             .action(async () => {
-                const response: State = await instructionTable.get(Instruction.dump)!.sendInstruction(connections[0].interface);
-                console.log(response);
+                const response: State = await connections[0].sendRequest(Request.dump);
+                console.log(`${JSON.stringify(response, null, 4)}`);
             })
     ).add(
         command('exit')
@@ -80,7 +79,7 @@ const repl: Program = program({exit: false})
 
 repl.repl();
 
-async function connect(program: string, port: string, platform: Platform): Promise<Instance> {
+async function connect(program: string, port: string, platform: Platform): Promise<Connection> {
     // compile program
     const output: CompileOutput = await oraPromise(new CompilerFactory(process.env.WABT ?? '')
         .pickCompiler(program)

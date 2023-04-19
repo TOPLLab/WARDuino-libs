@@ -4,10 +4,10 @@ import {Readable} from 'stream';
 import * as fs from 'fs';
 import * as net from 'net';
 import * as path from 'path';
-import {Emulator, Instance} from '../bridge/Instance';
+import {Connection, Serial, SubProcess} from '../bridge/Connection';
 
 export abstract class Uploader {
-    abstract upload(program: string): Promise<Instance>;
+    abstract upload(program: string): Promise<Connection>;
 
     protected removeTmpDir(tmpdir: string): Promise<void> {
         return new Promise((resolve, reject) => {
@@ -44,7 +44,7 @@ export class EmulatorUploader extends Uploader {
         this.args = args;
     }
 
-    upload(program: string, listener?: (chunk: any) => void): Promise<Emulator> {
+    upload(program: string, listener?: (chunk: any) => void): Promise<SubProcess> {
         return this.connectSocket(program, listener);
     }
 
@@ -54,7 +54,7 @@ export class EmulatorUploader extends Uploader {
         return spawn(this.interpreter, _args);
     }
 
-    private connectSocket(program: string, listener?: (chunk: any) => void): Promise<Emulator> {
+    private connectSocket(program: string, listener?: (chunk: any) => void): Promise<SubProcess> {
         const that = this;
         const process = this.startWARDuino(program);
 
@@ -73,8 +73,6 @@ export class EmulatorUploader extends Uploader {
                 process.stdout.pipe(reader);
 
                 reader.on('data', (data) => {
-                    console.log(data);
-
                     if (listener !== undefined) {
                         listener(data);
                     }
@@ -88,12 +86,7 @@ export class EmulatorUploader extends Uploader {
                             if (listener !== undefined) {
                                 client.on('data', listener);
                             }
-                            resolve({
-                                process: process, interface: client, kill: () => {
-                                    client.destroy();
-                                    return process.kill();
-                                }
-                            });
+                            resolve(new SubProcess(client, process));
                         });
                     } else {
                         error = data.toString();
@@ -129,7 +122,7 @@ export class ArduinoUploader extends Uploader {
         };
     }
 
-    public upload(program: string): Promise<Instance> {
+    public upload(program: string): Promise<Connection> {
         return this.stage(program).then(() => {
             return this.removeTmpDir(path.dirname(program));
         }).then(() => {
@@ -183,8 +176,8 @@ export class ArduinoUploader extends Uploader {
         });
     }
 
-    private connect(): Promise<Instance> {
-        return new Promise<Instance>((resolve, reject) => {
+    private connect(): Promise<Connection> {
+        return new Promise<Connection>((resolve, reject) => {
             const connection = new SerialPort(this.options,
                 (error) => {
                     if (error) {
@@ -196,12 +189,7 @@ export class ArduinoUploader extends Uploader {
             connection.on('data', function (data) {
                 if (data.includes('LOADED')) {
                     connection.removeAllListeners('data');
-                    resolve({
-                        interface: connection, kill: () => {
-                            connection.destroy();
-                            return connection.destroyed;
-                        }
-                    });
+                    resolve(new Serial(connection));
                 }
             });
         });
