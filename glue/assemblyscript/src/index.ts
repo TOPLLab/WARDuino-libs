@@ -93,7 +93,7 @@ export function digitalRead(pin: u32): PinVoltage {
 }
 
 /** Subscribe a callback function to an interrupt on the given pin. */
-export function interruptOn(pin: u32, mode: InterruptMode, fn: () => void): void {
+export function interruptOn(pin: u32, mode: InterruptMode, fn: (topic: string, payload: string) => void): void {
     ward._subscribe_interrupt(pin, fn, mode);
 }
 
@@ -103,6 +103,25 @@ export function print(text: string): void {
 }
 
 export namespace WiFi {
+    export enum Status {
+        /** No Wi-Fi hardware found */
+        NoShield = 255,
+        /** Wi-Fi is in process of changing between statuses */
+        Idle = 0,
+        /** Configured SSID cannot be reached */
+        SsidUnavailable = 1,
+        /** */
+        ScanCompleted = 2,
+        /** Successful connection is established */
+        Connected = 3,
+        /** Failed to connect */
+        ConnectFailed = 4,
+        /** No longer connected */
+        ConnectionLost = 5,
+        /** Module is not configured in station mode */
+        Disconnected = 6,
+    }
+
     /** Connect to Wi-Fi network with SSID and password. */
     function connect(ssid: string, password: string): void {
         ward._wifi_connect(String.UTF8.encode(ssid, true), String.UTF8.byteLength(ssid, true),
@@ -110,13 +129,13 @@ export namespace WiFi {
     }
 
     /** Returns the status of the Wi-Fi connection of the board. */
-    function status(): i32 {
+    function status(): Status {
         return ward._wifi_status();
     }
 
     /** Returns whether the board si still connected to Wi-Fi. */
     function connected(): bool {
-        return ward._wifi_status() === 3;
+        return status() === Status.Connected;
     }
 
     /** Returns the local IP address of the board. */
@@ -128,6 +147,29 @@ export namespace WiFi {
 }
 
 export namespace MQTT {
+    export enum Status {
+        /** The server didn't respond within the keepalive time */
+        ConnectionTimeout = -4,
+        /** The network connection was broken */
+        ConnectionLost = -3,
+        /** The network connection failed */
+        ConnectFailed = -2,
+        /** The client is disconnected cleanly */
+        Disconnected = -1,
+        /** The client is connected */
+        Connected = 0,
+        /** the server doesn't support the requested version of MQTT */
+        ConnectBadProtocol = 1,
+        /** The server rejected the client identifier */
+        ConnectBadClientId = 2,
+        /** The server was unable to accept the connection */
+        ConnectUnavailable = 3,
+        /** The username/password were rejected */
+        ConnectBadCredentials = 4,
+        /** The client was not authorized to connect */
+        ConnectUnauthorized = 5,
+    }
+
     /**  Configure an MQTT broker. */
     function configureBroker(server: string, port: u32): void {
         ward._mqtt_init(String.UTF8.encode(server, true), String.UTF8.byteLength(server, true), port);
@@ -140,11 +182,11 @@ export namespace MQTT {
 
     /** Returns whether the board is still connected to the MQTT broker. */
     function connected(): bool {
-        return ward._mqtt_connected() == 1;
+        return status() === Status.Connected;
     }
 
     /** Returns the status of the connection to the MQTT broker. */
-    function  state(): i32 {
+    function  status(): Status {
         return ward._mqtt_state();
     }
 

@@ -9,7 +9,10 @@ jobs:
       - uses: actions/checkout@v3
       - name: setup Rust
         run: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-      - run: cargo publish --dry-run
+      - name: cargo publish --dry-run
+        run: |
+          rustup target add wasm32-unknown-unknown
+          cargo publish --dry-run
         working-directory: glue/rust
 
   npm_package:

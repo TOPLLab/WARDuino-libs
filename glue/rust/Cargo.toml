@@ -8,7 +8,8 @@ include = [
     "Cargo.toml",
     "LICENSE",
     "/README.md",
-    "/src/**"
+    "/src/**",
+    "examples"
 ]
 keywords = ["warduino", "wasm"]
 license = "MPL-2.0"
@@ -17,3 +18,19 @@ license = "MPL-2.0"
 num = "0.4"
 num-traits = "0.2"
 num-derive = "0.3"
+
+[[example]]
+name = "blink"
+crate-type = ["cdylib"]
+
+[[example]]
+name = "button"
+crate-type = ["cdylib"]
+
+[[example]]
+name = "hello"
+crate-type = ["cdylib"]
+
+[[example]]
+name = "smartlamp"
+crate-type = ["cdylib"]

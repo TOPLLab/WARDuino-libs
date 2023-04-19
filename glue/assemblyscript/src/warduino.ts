@@ -13,7 +13,7 @@
 
 // Interrupts primitives
 
-@external("env", "subscribe_interrupt") export declare function _subscribe_interrupt(pin: u32, fn: () => void, mode: u32): void;
+@external("env", "subscribe_interrupt") export declare function _subscribe_interrupt(pin: u32, fn: (topic: string, payload: string) => void, mode: u32): void;
 
 // Serial
 @external("env", "print_string")        export declare function _print(text: ArrayBuffer, length: u32): void;
