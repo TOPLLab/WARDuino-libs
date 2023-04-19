@@ -14,8 +14,32 @@ export namespace WASM {
         ['i64', Type.i64]
     ]);
 
-    interface Value {
+    export interface Value {
         type: Type;
         value: number;
     }
+
+    export interface Frame {
+        type: number;
+        fidx: string;
+        sp: number;
+        fp: number;
+        block_key: number;
+        ra: number;
+        idx: number;
+    }
+
+    export interface Table {
+        max: number;
+        init: number;
+        elements: number[];
+    }
+
+    export interface Memory {
+        pages: number;
+        max: number;
+        init: number;
+        bytes: Uint8Array;
+    }
+
 }
