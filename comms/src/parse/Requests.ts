@@ -39,26 +39,32 @@ const IdentityParser = (line: string) => {
 export namespace Request {
     export const run: Request<string> = {
         instruction: Instruction.run,
-        expectedResponse: (line: string) => {
-            return line.includes('GO!');
-        },
-        parser: IdentityParser
+        parser: (line: string) => {
+            if (line !== 'GO!') {
+                throw Error("invalid ack for run request");
+            }
+            return line;
+        }
     };
 
     export const pause: Request<string> = {
         instruction: Instruction.pause,
-        expectedResponse: (line: string) => {
-            return line.includes('PAUSE!');
-        },
-        parser: IdentityParser
+        parser: (line: string) => {
+            if (line !== 'PAUSE!') {
+                throw Error("invalid ack for pause request");
+            }
+            return line;
+        }
     };
 
     export const step: Request<string> = {
         instruction: Instruction.step,
-        expectedResponse: (line) => {
-            return line.includes('STEP');
-        },
-        parser: IdentityParser
+        parser: (line: string) => {
+            if (line !== 'STEP!') {
+                throw Error("invalid ack for step request");
+            }
+            return line;
+        }
     };
 
     export const dump: Request<State> = {
