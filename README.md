@@ -1,6 +1,6 @@
-# WARDuino SDK
+# WARDuino libs
 
-This repository includes software tools for the WARDuino virtual machine.
+This repository includes libraries and software tools for the WARDuino virtual machine.
 
 ## Communication platform
 
