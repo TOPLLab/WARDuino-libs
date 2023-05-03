@@ -5,6 +5,10 @@ import {MessageQueue} from '../parse/MessageQueue';
 import {Request} from '../parse/Requests';
 import { EventEmitter } from "stream";
 
+export class ConnectionEvents{
+    public static readonly onMessage: string = 'onMessage';
+}
+
 type PromiseResolver<R> = (value: R | PromiseLike<R>) => void;
 
 export abstract class Connection extends EventEmitter {
@@ -44,8 +48,8 @@ export abstract class Connection extends EventEmitter {
                 resolver(candidate.parser(message));
                 this.requests.splice(index, 1);  // delete resolved request
             }
-
-            // silently drop message if no requests match
+    
+            this.emit(ConnectionEvents.onMessage, message);
         }
     }
 
