@@ -81,12 +81,6 @@ export abstract class Connection {
             });
         });
     }
-
-    // TODO abstract addListener(connection: Connection, listener: (data: string) => void): void;
-
-    // TODO abstract clearListeners(connection: Connection): void;
-
-    // TODO abstract disconnect(connection: Connection | void): Promise<void>;
 }
 
 export class Serial extends Connection {

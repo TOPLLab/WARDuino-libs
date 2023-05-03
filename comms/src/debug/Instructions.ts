@@ -13,12 +13,13 @@ export enum Instruction {
     updateStackValue = '14',
     updateGlobal= '15',
     updateFunction = '20',
+    updateLocal = '21',
     updateModule = '22',
     invoke = '40',
     // Pull debugging messages
     snapshot = '60',
     offset = '61',
-    loadSnapshot = '62', // WOOD Change state
+    loadSnapshot = '62',
     updateProxies = '63',
     proxyCall = '64',
     proxify = '65',
@@ -30,6 +31,3 @@ export enum Instruction {
     dumpCallbackmapping = '74',
     updateCallbackmapping = '75'
 }
-
-// TODO add interfaces return/acknowledgements (see branch carlos)
-
