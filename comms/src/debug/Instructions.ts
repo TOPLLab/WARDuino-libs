@@ -13,6 +13,7 @@ export enum Instruction {
     updateStackValue = '14',
     updateGlobal= '15',
     updateFunction = '20',
+    updateLocal = '21',
     updateModule = '22',
     invoke = '40',
     // Pull debugging messages
