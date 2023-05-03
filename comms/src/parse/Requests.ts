@@ -1,7 +1,8 @@
 import {Instruction} from '../debug/Instructions';
 import {WARDuino} from '../debug/WARDuino';
 import {WASM} from '../sourcemap/Wasm';
-import {stateParser} from './Parsers';
+import {ackParser, breakpointParser, stateParser} from './Parsers';
+import {Breakpoint} from '../debug/Breakpoint';
 import Value = WASM.Value;
 import Frame = WASM.Frame;
 import Table = WASM.Table;
@@ -10,6 +11,7 @@ import BRTable = WARDuino.BRTable;
 import CallbackMapping = WARDuino.CallbackMapping;
 import InterruptEvent = WARDuino.InterruptEvent;
 
+// WARDuino VM State - format returned by inspect/dump requests
 export interface State {
     pc?: number;
     pc_error?: number;
@@ -25,81 +27,137 @@ export interface State {
     events?: InterruptEvent[];
 }
 
-export interface Request<R> {
-    instruction: Instruction,
-    payload?: string,
-    parser: (input: string) => R,
-    expectedResponse?: (input: string) => boolean // TODO remove
+// An acknowledgement returned by the debugger
+export interface Ack {
+    ack: string
 }
 
-const IdentityParser = (line: string) => {
-    return line;
+// A request represents a debug message and its parser
+export interface Request<R> {
+    instruction: Instruction,     // instruction of the debug message (pause, run, step, ...)
+    payload?: string,             // optional payload of the debug message
+    parser: (input: string) => R  // the parser for the response to the debug message
 }
 
 export namespace Request {
-    export const run: Request<string> = {
+    export const run: Request<Ack> = {
         instruction: Instruction.run,
-        expectedResponse: (line: string) => {
-            return line.includes('GO!');
-        },
-        parser: IdentityParser
+        parser: (line: string) => {
+            return ackParser(line, 'GO');
+        }
     };
 
-    export const pause: Request<string> = {
+    export const halt: Request<Ack> = {
+        instruction: Instruction.halt,
+        parser: (line: string) => {
+            return ackParser(line, 'STOP');
+        }
+    };
+
+
+    export const pause: Request<Ack> = {
         instruction: Instruction.pause,
-        expectedResponse: (line: string) => {
-            return line.includes('PAUSE!');
-        },
-        parser: IdentityParser
+        parser: (line: string) => {
+            return ackParser(line, 'PAUSE');
+        }
     };
 
-    export const step: Request<string> = {
+    export const step: Request<Ack> = {
         instruction: Instruction.step,
-        expectedResponse: (line) => {
-            return line.includes('STEP');
-        },
-        parser: IdentityParser
+        parser: (line: string) => {
+            return ackParser(line, 'STEP');
+        }
     };
+
+    export function addBreakpoint(payload: Breakpoint): Request<Breakpoint> {
+        return {
+            instruction: Instruction.addBreakpoint,
+            payload: payload.toString(),
+            parser: breakpointParser
+        };
+    }
+
+    export function removeBreakpoint(payload: Breakpoint): Request<Breakpoint> {
+        return {
+            instruction: Instruction.removeBreakpoint,
+            payload: payload.toString(),
+            parser: breakpointParser
+        };
+    }
+
+    export function inspect(payload: string): Request<State> {
+        return {
+            instruction: Instruction.inspect,
+            payload: payload,
+            parser: stateParser
+        }
+    }
 
     export const dump: Request<State> = {
         instruction: Instruction.dump,
         parser: stateParser
     };
 
-    export function inspect(payload: string): Request<State> {
-        return {
-            instruction: Instruction.inspect,
-            payload: payload,
-            parser: (input: string) => {
-                const parsed: State = JSON.parse(input);
-                return parsed;
-            }
+    export const dumpLocals: Request<State> = {
+        instruction: Instruction.dumpLocals,
+        parser: stateParser
+    };
+
+    export const dumpAll: Request<State> = {
+        instruction: Instruction.dumpAll,
+        parser: stateParser
+    };
+
+    export const reset: Request<Ack> = {
+        instruction: Instruction.reset,
+        parser: (line: string) => {
+            return ackParser(line, 'RESET');
+        }
+    };
+
+    export const updateFunction: Request<Ack> = {
+        instruction: Instruction.updateFunction,
+        parser: (line: string) => {
+            return ackParser(line, 'CHANGE function');
         }
     }
-}
 
-type RequestBuilder<R> = (payload: string) => Request<R>;
-
-export class RequestFactory {
-    private static readonly requestTable: Map<Instruction, Request<any>> = new Map([
-        [Instruction.run, Request.run],
-        [Instruction.step, Request.step],
-        [Instruction.pause, Request.pause],
-    ]);
-
-    private static readonly requestBuilderTable: Map<Instruction, RequestBuilder<any>> = new Map([
-        [Instruction.inspect, Request.inspect]
-    ]);
-
-    public static getRequest(instruction: Instruction, payload?: string): Request<any> | undefined {
-        if (payload && RequestFactory.requestBuilderTable.has(instruction)) {
-            return RequestFactory.requestBuilderTable.get(instruction)!(payload);
+    export const updateLocal: Request<Ack> = {
+        instruction: Instruction.updateLocal,
+        parser: (line: string) => {
+            return ackParser(line, 'CHANGE local');
         }
+    }
 
-        if (RequestFactory.requestTable.has(instruction)) {
-            return RequestFactory.requestTable.get(instruction);
+    export const updateModule: Request<Ack> = {
+        instruction: Instruction.updateModule,
+        parser: (line: string) => {
+            return ackParser(line, 'CHANGE Module');
         }
+    }
 
-        return undefined;
+    export const invoke: Request<State> = {
+        instruction: Instruction.invoke,
+        parser: stateParser
+    }
+
+    export const snapshot: Request<State> = {
+        instruction: Instruction.snapshot,
+        parser: stateParser
+    }
+
+    export const dumpAllEvents: Request<State> = {
+        instruction: Instruction.dumpAllEvents,
+        parser: stateParser
+    }
+
+    export const dumpEvents: Request<State> = {
+        instruction: Instruction.dumpEvents,
+        parser: stateParser
+    }
+
+    export const dumpCallbackmapping: Request<State> = {
+        instruction: Instruction.dumpCallbackmapping,
+        parser: stateParser
     }
 }

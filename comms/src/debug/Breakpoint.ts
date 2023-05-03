@@ -16,5 +16,10 @@ export class Breakpoint extends Comparable {
     public equals(other: Breakpoint): boolean {
         return other.id === this.id;
     }
+
+    public toString = () : string => {
+        const hex: string = this.id.toString(16).toUpperCase();
+        return `0${(hex.length / 2).toString(16)}${hex} `;
+    }
 }
 

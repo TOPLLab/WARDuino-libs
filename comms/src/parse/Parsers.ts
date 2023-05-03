@@ -1,25 +1,32 @@
 import {WASM} from '../sourcemap/Wasm';
 import * as ieee754 from 'ieee754';
-import {State} from './Requests';
+import {Ack, State} from './Requests';
+import {Breakpoint} from '../debug/Breakpoint';
+
+export function identityParser(text: string) {
+    return stripEnd(text);
+}
 
 export function stateParser(text: string): State {
     return JSON.parse(text);
 }
 
-export function defaultParser(text: string): any {
-    return JSON.parse(text);
+export function ackParser(text: string, ack: string): Ack {
+    if (text.toLowerCase().includes(ack.toLowerCase())) {
+        return {'ack': identityParser(text)};
+    }
+    throw Error(`No ack for ${ack}.`);
 }
 
-function resetParser(text: string): Object {
-    if (!text.toLowerCase().includes('reset')) {
-        throw new Error();
+export function breakpointParser(text: string): Breakpoint {
+    const ack: Ack = ackParser(text, 'BP');
+
+    let breakpointInfo = ack.ack.match(/BP (0x.*)!/);
+    if (breakpointInfo!.length > 1) {
+        return new Breakpoint(parseInt(breakpointInfo![1]), 0); // TODO address to line mapping
     }
 
-    return ackParser(text);
-}
-
-function ackParser(text: string): Object {
-    return {'ack': text};
+    throw new Error('Could not parse BREAKPOINT address in ack.');
 }
 
 function returnParser(text: string): Object {
@@ -36,4 +43,9 @@ function returnParser(text: string): Object {
     }
 
     return result;
+}
+
+// Strips all trailing newlines
+function stripEnd(text: string): string {
+    return text.replace(/\s+$/g, '');
 }
