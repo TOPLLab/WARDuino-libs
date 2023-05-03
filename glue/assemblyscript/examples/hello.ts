@@ -1,5 +1,5 @@
 // Hello world!
-import {print, delay} from "../src/index";
+import {print, delay} from "as-warduino";
 
 export function main(): void {
     while (true) {

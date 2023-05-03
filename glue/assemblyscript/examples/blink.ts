@@ -1,5 +1,5 @@
 // Blinking LED example
-import {pinMode, PinMode, PinVoltage, digitalWrite, delay} from "../src/index";
+import {pinMode, PinMode, PinVoltage, digitalWrite, delay} from "as-warduino";
 import {config} from "./config";
 
 export function main(): void {

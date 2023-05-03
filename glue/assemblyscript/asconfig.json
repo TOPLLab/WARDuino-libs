@@ -1,7 +1,7 @@
 {
   "entries": [
-    "src/index.ts",
-    "src/warduino.ts"
+    "assembly/index.ts",
+    "assembly/warduino.ts"
   ],
   "targets": {
     "debug": {
