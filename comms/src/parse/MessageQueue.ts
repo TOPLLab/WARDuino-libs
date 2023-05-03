@@ -17,8 +17,12 @@ export class MessageQueue implements Iterable<string> {
 
     public pop(): string | undefined {
         if (this.hasCompleteMessage()) {
-            return this.queue.shift();
+            return this.stripEnd(this.queue.shift() ?? '');
         }
+    }
+    
+    private stripEnd(text: string): string {
+        return text.replace(/\s+$/g, '');
     }
 
     private split(text: string): string[] {
