@@ -17,7 +17,14 @@ export class MessageQueue implements Iterable<string> {
 
     public pop(): string | undefined {
         if (this.hasCompleteMessage()) {
-            return this.queue.shift();
+            let msg = this.queue.shift();
+            if (msg?.endsWith("\n")){
+                msg = msg.substring(0, msg.length -1);
+            }
+            if (msg?.endsWith("\r")){
+                msg = msg.substring(0, msg.length -1);
+            }
+            return msg;
         }
     }
 
