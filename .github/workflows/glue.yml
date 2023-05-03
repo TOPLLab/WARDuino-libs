@@ -1,0 +1,30 @@
+name: "Glue: build and test"
+on: [push]
+
+jobs:
+  cargo_crate:
+    name: Build Rust crate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: setup Rust
+        run: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+      - name: cargo publish --dry-run
+        run: |
+          rustup target add wasm32-unknown-unknown
+          cargo publish --dry-run
+        working-directory: glue/rust
+
+  npm_package:
+    name: Build AS package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: latest
+      - name: npm publish --dry-run
+        run: |
+          npm install
+          npm publish --dry-run
+        working-directory: glue/assemblyscript

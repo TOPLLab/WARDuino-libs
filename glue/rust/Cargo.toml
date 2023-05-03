@@ -1,0 +1,36 @@
+[package]
+name = "warduino"
+version = "0.1.0"
+authors = ["Tom Lauwaerts <tom.lauwaerts@ugent.be>"]
+description = "Library for WARDuino primitives"
+edition = "2018"
+include = [
+    "Cargo.toml",
+    "LICENSE",
+    "/README.md",
+    "/src/**",
+    "examples"
+]
+keywords = ["warduino", "wasm"]
+license = "MPL-2.0"
+
+[dependencies]
+num = "0.4"
+num-traits = "0.2"
+num-derive = "0.3"
+
+[[example]]
+name = "blink"
+crate-type = ["cdylib"]
+
+[[example]]
+name = "button"
+crate-type = ["cdylib"]
+
+[[example]]
+name = "hello"
+crate-type = ["cdylib"]
+
+[[example]]
+name = "smartlamp"
+crate-type = ["cdylib"]

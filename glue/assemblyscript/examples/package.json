@@ -1,0 +1,14 @@
+{
+  "name": "warduino-example",
+  "version": "0.1.0",
+  "main": "blink.ts",
+  "license": "MPL-2.0",
+  "author": "Team WARDuino <warduino@ugent.be>",
+  "repository": "https://github.com/TOPLLab/WARDuino-sdk.git",
+  "scripts": {
+    "build": "asc blink.ts --target release --textFile=blink.wast"
+  },
+  "devDependencies": {
+    "as-warduino": "file:./as-warduino-0.1.0.tgz",
+    "assemblyscript": "^0.19.5"
+  }}

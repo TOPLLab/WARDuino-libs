@@ -1,0 +1,24 @@
+{
+  "name": "as-warduino",
+  "version": "0.1.0",
+  "types": "assembly/index.ts",
+  "license": "MPL-2.0",
+  "author": "Team WARDuino <warduino@ugent.be>",
+  "repository": "https://github.com/TOPLLab/WARDuino-sdk.git",
+  "tags": [
+    "arduino",
+    "assemblyscript",
+    "esp32",
+    "warduino",
+    "webassembly"
+  ],
+  "scripts": {
+    "asbuild:untouched": "asc assembly/index.ts -b build/untouched.wasm -t build/untouched.wat --sourceMap --debug",
+    "asbuild:optimized": "asc assembly/index.ts -b build/optimized.wasm -t build/optimized.wat --sourceMap --optimize",
+    "asbuild": "npm run asbuild:untouched && npm run asbuild:optimized",
+    "prepublishOnly": "npm run asbuild"
+  },
+  "devDependencies": {
+    "assemblyscript": "latest"
+  }
+}

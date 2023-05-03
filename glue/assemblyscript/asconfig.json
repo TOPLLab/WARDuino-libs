@@ -1,0 +1,30 @@
+{
+  "entries": [
+    "assembly/index.ts",
+    "assembly/warduino.ts"
+  ],
+  "targets": {
+    "debug": {
+      "sourceMap": true,
+      "debug": true,
+      "exportRuntime": true
+    },
+    "release": {
+      "sourceMap": false,
+      "optimizeLevel": 3,
+      "shrinkLevel": 2,
+      "exportRuntime": false,
+      "runtime": "stub",
+      "converge": true,
+      "noAssert": false,
+      "maximumMemory": 2,
+      "disable": [
+          "mutable-globals",
+          "sign-extension",
+          "nontrapping-f2i",
+          "bulk-memory"
+      ]
+    }
+  },
+  "options": {}
+}
