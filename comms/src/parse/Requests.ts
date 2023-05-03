@@ -32,9 +32,6 @@ export interface Request<R> {
     expectedResponse?: (input: string) => boolean // TODO remove
 }
 
-const IdentityParser = (line: string) => {
-    return line;
-}
 
 export namespace Request {
     export const run: Request<string> = {
@@ -56,7 +53,7 @@ export namespace Request {
             return line;
         }
     };
-
+    
     export const step: Request<string> = {
         instruction: Instruction.step,
         parser: (line: string) => {
