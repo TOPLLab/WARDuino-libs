@@ -3,10 +3,11 @@ import {Duplex} from 'stream';
 import {SerialPort} from 'serialport';
 import {MessageQueue} from '../parse/MessageQueue';
 import {Request} from '../parse/Requests';
+import { EventEmitter } from "stream";
 
 type PromiseResolver<R> = (value: R | PromiseLike<R>) => void;
 
-export abstract class Connection {
+export abstract class Connection extends EventEmitter {
     protected channel: Duplex;
 
     protected requests: [Request<any>, PromiseResolver<any>][];
@@ -14,6 +15,7 @@ export abstract class Connection {
     protected messages: MessageQueue;
 
     protected constructor(channel: Duplex) {
+        super();
         this.channel = channel;
         this.requests = [];
         this.messages = new MessageQueue('\n');
