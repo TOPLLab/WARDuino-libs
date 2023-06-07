@@ -7,11 +7,11 @@ import {
     Connection,
     EmulatorUploader,
     Request,
-    State,
-    Uploader
+    Uploader, WARDuino
 } from 'warduino-comms';
 
 import {homedir} from 'os';
+import State = WARDuino.State;
 
 const EMULATOR: string = `${homedir()}/Arduino/libraries/WARDuino/build-emu/wdcli`;
 const ARDUINO: string = `${homedir()}/Arduino/libraries/WARDuino/platforms/Arduino/`;
@@ -33,10 +33,10 @@ const repl: Program = program({exit: false})
         command('spawn')
             .description('Start and connect')
             .option('program', {
-                description: 'WebAssembly program (.wat)',
-                default: 'blink.wat',
+                description: 'Source program (.wat, .ts)',
+                default: 'blink.ts',
                 required: true,
-                prompt: 'WAT program file',
+                prompt: 'WAT or AS program file',
             })
             .option('platform', {
                 description: 'Target platform',
@@ -89,7 +89,7 @@ async function connect(program: string, port: string, platform: Platform): Promi
         failText: 'Failed to compile program.'
     });
 
-    return oraPromise(new UploaderFactory(EMULATOR, ARDUINO).pickUploader(platform, port).upload(output.file), {
+    return oraPromise(new UploaderFactory(EMULATOR, ARDUINO).pickUploader(platform, port).upload(`${output.dir}/upload.wasm`), {
         text: `Uploading to ${port} ...`,
         successText: `Uploaded with Arduino.`,
         failText: 'Failed to upload with Arduino.'

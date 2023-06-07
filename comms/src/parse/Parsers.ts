@@ -1,7 +1,9 @@
 import {WASM} from '../sourcemap/Wasm';
 import * as ieee754 from 'ieee754';
-import {Ack, State} from './Requests';
+import {Ack} from './Requests';
 import {Breakpoint} from '../debug/Breakpoint';
+import {WARDuino} from '../debug/WARDuino';
+import State = WARDuino.State;
 
 export function identityParser(text: string) {
     return stripEnd(text);

@@ -11,21 +11,6 @@ import BRTable = WARDuino.BRTable;
 import CallbackMapping = WARDuino.CallbackMapping;
 import InterruptEvent = WARDuino.InterruptEvent;
 
-// WARDuino VM State - format returned by inspect/dump requests
-export interface State {
-    pc?: number;
-    pc_error?: number;
-    exception_msg?: string;
-    breakpoints?: number[];
-    stack?: Value[];
-    callstack?: Frame[];
-    globals?: Value[];
-    table?: Table;
-    memory?: Memory;
-    br_table?: BRTable;
-    callbacks?: CallbackMapping[];
-    events?: InterruptEvent[];
-}
 
 // An acknowledgement returned by the debugger
 export interface Ack {
@@ -40,6 +25,7 @@ export interface Request<R> {
 }
 
 export namespace Request {
+    import State = WARDuino.State;
     export const run: Request<Ack> = {
         instruction: Instruction.run,
         parser: (line: string) => {

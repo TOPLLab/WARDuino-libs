@@ -74,9 +74,8 @@ export class WatMapper implements SourceMapper {
     }
 
     private static extractLineInfo(line: string): SourceLine {
-        line = line.substring(1);
-        const obj: any = new Function(`return ${line}`)();
-        return {line: obj.line, columnStart: obj.col_start, columnEnd: obj.col_end, instructions: []};
+        const obj = JSON.parse(line.substring(2));
+        return {line: obj.line, columnStart: obj.col_start - 1, columnEnd: obj.col_end, instructions: []};
     }
 
     private static extractAddressInfo(line?: string): TargetInstruction[] {

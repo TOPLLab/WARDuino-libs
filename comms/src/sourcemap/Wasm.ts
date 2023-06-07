@@ -41,5 +41,4 @@ export namespace WASM {
         init: number;
         bytes: Uint8Array;
     }
-
 }

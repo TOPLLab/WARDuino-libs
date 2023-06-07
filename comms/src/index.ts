@@ -3,6 +3,7 @@
 export * from './bridge/Connection';
 export * from './bridge/ProcessBridge';
 export * from './debug/Instructions';
+export * from './debug/WARDuino';
 export * from './manage/Compiler';
 export * from './manage/Uploader';
 export * from './parse/Requests';
