@@ -10,6 +10,13 @@
 @external("env", "chip_digital_read")   export declare function _digital_read(pin: u32): u32;
 
 @external("env", "chip_analog_read")    export declare function _analog_read(pin: u32): i32;
+@external("env", "chip_analog_write")   export declare function _analog_write(pin: u32, signal: u32): i32;
+
+// LED Control primitives
+
+@external("env", "chip_ledc_setup")        export declare function _analog_setup(channel: u32, frequency: u32, timer: u32): void;
+@external("env", "chip_ledc_attach_pin")   export declare function _analog_attach(pin: u32, channel: u32): void;
+@external("env", "chip_ledc_set_duty")     export declare function _analog_duty(channel: u32, value: i32, max: u32): void;
 
 // Interrupts primitives
 

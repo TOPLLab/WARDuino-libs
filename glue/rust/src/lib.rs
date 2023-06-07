@@ -111,6 +111,9 @@ pub fn digital_read(pin: u32) -> PinVoltage { unsafe { num::FromPrimitive::from_
 /// Reads the value from the specified analog pin.
 pub fn analog_read(pin: u32) -> i32 { unsafe { _analogRead(pin) } }
 
+/// Writes the value to the specified analog pin.
+pub fn analog_write(pin: u32, signal: u32) -> i32 { unsafe { _analogWrite(pin, signal) } }
+
 /// The status of the Wi-Fi connection
 #[derive(FromPrimitive, PartialEq)]
 pub enum WiFiStatus {

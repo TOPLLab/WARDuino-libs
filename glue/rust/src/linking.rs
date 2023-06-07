@@ -13,8 +13,12 @@ extern {
     pub fn _digitalWrite(pin: u32, value: u32);
     #[link_name = "chip_digital_read"]
     pub fn _digitalRead(pin: u32) -> u32;
+
+    // Analog I/O
     #[link_name = "chip_analog_read"]
     pub fn _analogRead(pin: u32) -> i32;
+    #[link_name = "chip_analog_write"]
+    pub fn _analogWrite(pin: u32, signal: u32) -> i32;
 
     // Serial
     #[link_name = "print_string"]
