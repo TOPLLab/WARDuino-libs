@@ -47,8 +47,25 @@ export function sleep(s: u32): void {
 }
 
 /** Reads the value from the specified analog pin. */
-export function analog_read(pin: u32): i32 {
+export function analogRead(pin: u32): i32 {
     return ward._analog_read(pin);
+}
+
+/** Write the value to the specified analog pin. */
+export function analogWrite(pin: u32, signal: u32): void {
+    ward._analog_write(pin, signal);
+}
+
+export function analogSetup(channel: u32, frequency: u32, timer: u32): void {
+    ward._analog_setup(channel, frequency, timer);
+}
+
+export function analogAttach(pin: u32, channel: u32): void {
+    ward._analog_attach(pin, channel);
+}
+
+export function analogDuty(channel: u32, value: i32, max: u32): void {
+    ward._analog_duty(channel, value, max);
 }
 
 /** The voltage of a digital pin. */

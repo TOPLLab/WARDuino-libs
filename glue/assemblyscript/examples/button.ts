@@ -5,7 +5,6 @@ import {
     digitalWrite,
     InterruptMode,
     interruptOn,
-    MQTT,
     pinMode,
     PinMode,
     PinVoltage
@@ -37,7 +36,6 @@ export function main(): void {
 
     while (true) {
         delay(1000);
-        MQTT.loop();
     }
 }
 

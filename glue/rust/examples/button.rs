@@ -1,5 +1,5 @@
 // config::BUTTON demo app
-use warduino::{delay, digital_read, digital_write, InterruptMode, mqtt_loop, pin_mode, PinMode, PinVoltage, sub_interrupt};
+use warduino::{delay, digital_read, digital_write, InterruptMode, pin_mode, PinMode, PinVoltage, sub_interrupt};
 
 mod config;
 
@@ -20,7 +20,6 @@ pub fn main() {
 
     loop {
         delay(1000);
-        mqtt_loop();
     }
 }
 
