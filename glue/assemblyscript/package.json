@@ -20,5 +20,9 @@
   },
   "devDependencies": {
     "assemblyscript": "latest"
-  }
+  },
+  "files": [
+    "assembly/index.ts",
+    "assembly/warduino.ts"
+  ]
 }
