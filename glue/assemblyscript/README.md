@@ -15,7 +15,7 @@
 
 ## Installation
 
-This package requires **WARDuino 0.2.3+** and **AssemblyScript 0.17.14+**.
+This package requires **WARDuino 0.4.x** and **AssemblyScript 0.17.14+**.
 
 ```bash
 npm i as-warduino
@@ -23,8 +23,23 @@ npm i as-warduino
 
 ## Example
 
+Imports in AssemblyScript changed starting from version `0.20.x`.
+Before you could write:
+
 ```ts
-import {pinMode, PinMode, PinVoltage, digitalWrite, delay} from "as-warduino";
+import { delay } from "as-warduino";
+```
+
+Starting from `0.20.x` you need to import the library in the following way:
+
+```ts
+import { delay } from "as-warduino/assembly";
+```
+
+A simple blink program looks as follows:
+
+```ts
+import {pinMode, PinMode, PinVoltage, digitalWrite, delay} from "as-warduino/assembly";
 
 export function main(): void {
     let led = 26;
@@ -38,4 +53,5 @@ export function main(): void {
         delay(pause);
     }
 }
+```
 

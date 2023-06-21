@@ -12,7 +12,7 @@ import {
     print,
     sleep,
     WiFi
-} from "as-warduino";
+} from "as-warduino/assembly";
 import {config} from "./config";
 
 function until(done: () => boolean, attempt: () => void): void {

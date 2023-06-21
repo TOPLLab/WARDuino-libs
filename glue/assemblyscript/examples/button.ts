@@ -8,7 +8,7 @@ import {
     pinMode,
     PinMode,
     PinVoltage
-} from "as-warduino";
+} from "as-warduino/assembly";
 import {config} from "./config";
 
 function invert(voltage: PinVoltage): PinVoltage {

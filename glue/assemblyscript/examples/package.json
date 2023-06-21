@@ -6,9 +6,9 @@
   "author": "Team WARDuino <warduino@ugent.be>",
   "repository": "https://github.com/TOPLLab/WARDuino-sdk.git",
   "scripts": {
-    "build": "asc blink.ts --target release --textFile=blink.wast"
+    "build": "npx asc blink.ts --target release --textFile=blink.wast"
   },
   "devDependencies": {
     "as-warduino": "file:./as-warduino-0.1.0.tgz",
-    "assemblyscript": "^0.19.5"
+    "assemblyscript": "latest"
   }}
