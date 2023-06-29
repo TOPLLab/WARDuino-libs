@@ -228,6 +228,8 @@ export namespace MQTT {
     }
 }
 
+const buffersizeMaximum: u32 = 1000;
+
 export namespace HTTP {
     class PostOptions {
         url: string;
@@ -241,16 +243,20 @@ export namespace HTTP {
     }
 
     /** Send an HTTP GET request. The response is written to an ArrayBuffer. */
-    function get(url: string, response: ArrayBuffer): i32 {
-        return ward._http_get(String.UTF8.encode(url, true), String.UTF8.byteLength(url, true), response, response.byteLength);
+    function get(url: string): string {
+        const response: ArrayBuffer = new ArrayBuffer(buffersizeMaximum);
+        ward._http_get(String.UTF8.encode(url, true), String.UTF8.byteLength(url, true), response, response.byteLength);
+        return String.UTF8.decode(response);
     }
 
     /** Send an HTTP POST request. The response is written to an ArrayBuffer. */
-    function post(options: PostOptions, response: ArrayBuffer): i32 {
-        return ward._http_post(String.UTF8.encode(options.url, true), String.UTF8.byteLength(options.url, true),
+    function post(options: PostOptions): string {
+        const response: ArrayBuffer = new ArrayBuffer(buffersizeMaximum);
+        ward._http_post(String.UTF8.encode(options.url, true), String.UTF8.byteLength(options.url, true),
                           String.UTF8.encode(options.body, true), String.UTF8.byteLength(options.body, true),
                           String.UTF8.encode(options.content_type, true), String.UTF8.byteLength(options.content_type, true),
                           String.UTF8.encode(options.authorization, true), String.UTF8.byteLength(options.authorization, true),
                           response, response.byteLength);
+        return String.UTF8.decode(response);
     }
 }
