@@ -76,6 +76,14 @@ export enum PinVoltage {
     HIGH = 1,
 }
 
+export function invert(mode: PinVoltage): PinVoltage {
+    if (mode === PinVoltage.LOW) {
+        return PinVoltage.HIGH;
+    } else {
+        return PinVoltage.LOW;
+    }
+}
+
 /** The mode of a pin interrupt. */
 export enum InterruptMode {
     /** Changing edge on a digital I/O pin */
@@ -93,6 +101,7 @@ export enum PinMode {
     /** Output mode for digital pins */
     OUTPUT = 0x2,
 }
+
 
 /** Configures the [PinMode] of the specified pin. */
 export function pinMode(pin: u32, mode: PinMode): void {
@@ -223,7 +232,7 @@ export namespace MQTT {
     }
 
     /**  Check for messages from the MQTT broker. */
-    function  loop(): i32 {
+    function  poll(): i32 {
         return ward._mqtt_loop();
     }
 }
