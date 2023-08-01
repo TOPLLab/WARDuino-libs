@@ -6,6 +6,32 @@ import * as net from 'net';
 import * as path from 'path';
 import {Connection, Serial, SubProcess} from '../bridge/Connection';
 
+export enum Platform {
+    emulated,
+    arduino
+}
+
+export class UploaderFactory {
+    private readonly emulator: string;
+    private readonly arduino: string;
+
+    constructor(emulator: string, arduino: string) {
+        this.emulator = emulator;
+        this.arduino = arduino;
+    }
+
+    public pickUploader(platform: Platform, port: string): Uploader {
+        switch (platform) {
+            case Platform.arduino:
+                return new ArduinoUploader(this.arduino, {path: port});
+            case Platform.emulated:
+                return new EmulatorUploader(this.emulator, parseInt(port));
+        }
+        throw new Error('Unsupported file type');
+    }
+}
+
+
 export abstract class Uploader {
     abstract upload(program: string): Promise<Connection>;
 
@@ -50,7 +76,6 @@ export class EmulatorUploader extends Uploader {
 
     private startWARDuino(program: string): ChildProcess {
         const _args: string[] = [program, '--socket', (this.port).toString()].concat(this.args);
-        console.log(_args.join(' '));
         return spawn(this.interpreter, _args);
     }
 

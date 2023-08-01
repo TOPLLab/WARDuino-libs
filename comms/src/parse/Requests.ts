@@ -1,16 +1,7 @@
 import {Instruction} from '../debug/Instructions';
 import {WARDuino} from '../debug/WARDuino';
-import {WASM} from '../sourcemap/Wasm';
 import {ackParser, breakpointParser, stateParser} from './Parsers';
 import {Breakpoint} from '../debug/Breakpoint';
-import Value = WASM.Value;
-import Frame = WASM.Frame;
-import Table = WASM.Table;
-import Memory = WASM.Memory;
-import BRTable = WARDuino.BRTable;
-import CallbackMapping = WARDuino.CallbackMapping;
-import InterruptEvent = WARDuino.InterruptEvent;
-
 
 // An acknowledgement returned by the debugger
 export interface Ack {

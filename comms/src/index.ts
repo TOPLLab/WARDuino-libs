@@ -8,3 +8,4 @@ export * from './manage/Compiler';
 export * from './manage/Uploader';
 export * from './parse/Requests';
 export * from './sourcemap/SourceMap';
+export * from './sourcemap/SourceMapper';

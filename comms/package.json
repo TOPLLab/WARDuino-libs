@@ -37,10 +37,11 @@
   },
   "homepage": "https://github.com/TOPLLab/WARDuino-sdk/tree/main#readme",
   "dependencies": {
+    "assemblyscript": "0.27",
     "ieee754": "^1.2.1",
     "serialport": "^10.5.0",
-    "typescript": "latest",
-    "assemblyscript": "0.17"
+    "sha512-crypt-ts": "^0.1.27",
+    "typescript": "latest"
   },
   "devDependencies": {
     "@types/node": "^18.15.11",
