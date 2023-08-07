@@ -89,7 +89,7 @@ export class EmulatorUploader extends Uploader {
     }
 
     private startWARDuino(program: string): ChildProcess {
-        const _args: string[] = [program, '--socket', (this.port).toString()].concat(this.args);
+        const _args: string[] = [program, '--paused', '--socket', (this.port).toString()].concat(this.args);
         return spawn(this.interpreter, _args);
     }
 

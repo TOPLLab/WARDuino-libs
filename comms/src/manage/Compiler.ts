@@ -4,20 +4,23 @@ import * as path from 'path';
 import {exec, ExecException} from 'child_process';
 import {SourceMap} from '../sourcemap/SourceMap';
 import * as readline from 'readline';
-import SourceLine = SourceMap.SourceLine;
 import {EventEmitter} from 'events';
+import {getFileExtension} from '../util/util';
+import {AsScriptMapper} from '../sourcemap/SourceMapper';
+import SourceLine = SourceMap.SourceLine;
 
 enum CompilationEvents {
-    started = 'started',
-    failed = 'failed',
-    sourcemap = 'sourcemap',
-    compiled = 'compiled'
+    started = 'started',      // started compilation process
+    failed = 'failed',        // something failed and the process was aborted
+    sourcemap = 'sourcemap',  // finished generating source map
+    compiled = 'compiled'     // finished compiling
 }
 
 export interface CompileOutput {
     dir: string; // the directory with compilation output
     out?: String;
     err?: String;
+    map?: SourceMap.Mapping;
 }
 
 export class CompilerFactory {
@@ -47,7 +50,7 @@ export abstract class Compiler extends EventEmitter {
     abstract compile(program: string): Promise<CompileOutput>;
 
     // generates a sourceMap
-    abstract map(program: string): Promise<SourceMap.Mapping>;
+    abstract map(program: string): Promise<CompileOutput>;
 
     protected makeTmpDir(): Promise<string> {
         return new Promise((resolve, reject) => {
@@ -109,18 +112,21 @@ export class WatCompiler extends Compiler {
                     return;
                 }
                 this.compiled.set(program, {dir: dir, out: out, err: err});
+                this.emit(CompilationEvents.compiled);
                 resolve({dir: dir, out: out, err: err});
             });
         });
     }
 
-    public dump(output: CompileOutput): Promise<SourceMap.Mapping> {
+    public dump(output: CompileOutput): Promise<CompileOutput> {
         // object dump
-        return new Promise<SourceMap.Mapping>((resolve, reject) => {
+        return new Promise<CompileOutput>((resolve, reject) => {
             const command = `${this.wabt}/wasm-objdump -x -m ${output.dir}/upload.wasm`;
 
             let compile = exec(command, (error: ExecException | null, stdout: String, stderr: any) => {
-                resolve(this.parseWasmObjDump(output, stdout.toString()));
+                output.map = this.parseWasmObjDump(output, stdout.toString());
+                this.emit(CompilationEvents.sourcemap);
+                resolve(output);
             });
 
             compile.on('close', (code) => {
@@ -132,14 +138,14 @@ export class WatCompiler extends Compiler {
         });
     }
 
-    public async map(program: string): Promise<SourceMap.Mapping> {
+    public async map(program: string): Promise<CompileOutput> {
         return this.compile(program).then((output) => {
             return this.dump(output);
         });
     }
 
     private parseWasmObjDump(context: CompileOutput, input: string): SourceMap.Mapping {
-        return {lines: parseLines(context), functions: parseExport(input), globals: [], imports: []};
+        return new SourceMap.Mapping().init(parseLines(context), parseExport(input), [], []);
     }
 }
 
@@ -159,18 +165,12 @@ export class AsScriptCompiler extends Compiler {
         });
     }
 
-    public async map(program: string): Promise<SourceMap.Mapping> {
-        const wat = new WatCompiler(this.wabt);
-        const compiler = this;
-
+    public async map(program: string): Promise<CompileOutput> {
+        const emitter = this;
         return this.compile(program).then(async function (output: CompileOutput) {
-            const dump = await wat.dump(output);
-            return Promise.resolve({
-                lines: await compiler.lineInformation(program, output, dump),
-                functions: [],
-                globals: [],
-                imports: []
-            });
+            output.map = await new AsScriptMapper(program, output.dir).mapping();
+            emitter.emit(CompilationEvents.sourcemap);
+            return Promise.resolve(output);
         });
     }
 
@@ -228,10 +228,9 @@ export class AsScriptCompiler extends Compiler {
                     return;
                 }
                 this.compiled.set(program, {dir: dir, out: out, err: err});
+                this.emit(CompilationEvents.compiled);
                 resolve({dir: dir, out: out, err: err});
             })
-        }).then((output: CompileOutput) => {
-            return wat.compile(`${output.dir}/upload.wast`, output.dir);
         });
     }
 
@@ -291,14 +290,6 @@ interface Version {
     patch: number;
 }
 
-function getFileExtension(file: string): string {
-    let splitted = file.split('.');
-    if (splitted.length === 2) {
-        return splitted.pop()!;
-    }
-    throw Error('Could not determine file type');
-}
-
 export function parseExport(input: string): SourceMap.Closure[] {
     const results: SourceMap.Closure[] = [];
     const section: string[] = consumeUntil(input, 'Export').split('\n');
@@ -342,7 +333,7 @@ function parseLines(context: CompileOutput): SourceMap.SourceLine[] {
                 line: lastLineInfo!.line,
                 columnStart: lastLineInfo!.column,
                 columnEnd: -1,
-                instructions: [{address: addr}]
+                instructions: [{address: parseInt(addr, 16)}]
             });
         } catch (e) {
         }

@@ -2,15 +2,16 @@ import {sha512} from 'sha512-crypt-ts';
 import {readFileSync} from 'fs';
 import {
     CompileOutput,
+    Compiler,
     CompilerFactory,
     Connection,
     Platform,
-    SourceMapper,
+    SourceMap,
     Uploader,
     UploaderFactory
 } from 'warduino-comms';
 import {homedir} from 'os';
-import ora, {oraPromise} from 'ora';
+import ora from 'ora';
 import EventEmitter from 'events';
 
 const EMULATOR: string = `${homedir()}/Arduino/libraries/WARDuino/build-emu/wdcli`;
@@ -26,6 +27,7 @@ enum DebuggerEvents {
     compiling = 'compiling',
     connected = 'connected',
     failed = 'failed',
+    sourcemap = 'sourcemap',
     uploaded = 'uploaded',
     uploading = 'uploading',
 }
@@ -39,7 +41,7 @@ export class Debugger extends EventEmitter {
 
     public connection?: Connection;
 
-    public sourcemapper?: SourceMapper;  // TODO
+    public mapping?: SourceMap.Mapping;  // TODO
 
     private program: Program;
 
@@ -70,18 +72,37 @@ export class Debugger extends EventEmitter {
     private async connect(program: string, port: string, platform: string): Promise<Connection> {
         this.emit(DebuggerEvents.compiling);
 
-        // compile program
-        const output: CompileOutput = await oraPromise(new CompilerFactory(process.env.WABT ?? '')
-            .pickCompiler(program)
-            .compile(program), {
-            text: 'Compiling program ...',
-            successText: 'Compiled program.',
-            failText: 'Failed to compile program.'
+        const compiler: Compiler = await new CompilerFactory(process.env.WABT ?? '').pickCompiler(program);
+        let compiled: boolean = false;
+
+        let compiling = ora('Compiling program ...').start();
+        let generating = ora('Generating source map ...');
+
+        compiler.on('compiled', () => {
+            this.emit(DebuggerEvents.compiled);
+            compiled = true;
+            compiling.succeed('Compiled program.');
+            generating.start();
         });
 
-        this.emit(DebuggerEvents.compiled);
+        compiler.on('sourcemap', () => {
+            this.emit(DebuggerEvents.sourcemap);
+            generating.succeed('Generated source map.');
+        });
 
-        const uploaded = false;
+        compiler.on('failed', () => {
+            if (!compiled) {
+                compiling.fail('Failed to compile program.');
+            } else {
+                generating.fail('Failed to generate source map.');
+            }
+        });
+
+        // compile program
+        const output: CompileOutput = await compiler.map(program);
+        this.mapping = output.map;
+
+        let uploaded: boolean = false;
 
         this.emit(DebuggerEvents.uploading);
 
@@ -90,6 +111,7 @@ export class Debugger extends EventEmitter {
         const uploader: Uploader = new UploaderFactory(EMULATOR, ARDUINO).pickUploader(platformMap.get(platform) ?? Platform.emulated, port);
         uploader.on('started', () => uploading.start());
         uploader.on('connecting', () => {
+            uploaded = true;
             uploading.succeed(`Uploaded to ${platform}.`);
             connecting.start();
         });

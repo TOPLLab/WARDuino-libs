@@ -45,6 +45,12 @@ const repl: Program = program({exit: false})
                 console.log(`${JSON.stringify(response, null, 4)}`);
             })
     ).add(
+        command('map')
+            .description('Get mapping')
+            .action(async () => {
+                console.log(`${JSON.stringify(instances[0].mapping, null, 4)}`);
+            })
+    ).add(
         command('exit')
             .description('Exit the REPL')
             .action(async () => {

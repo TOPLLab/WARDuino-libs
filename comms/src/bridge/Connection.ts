@@ -30,7 +30,6 @@ export abstract class Connection extends EventEmitter {
     // listen on duplex channel
     protected listen(): void {
         this.channel.on('data', (data: Buffer) => {
-            console.log(data.toString());
             this.messages.push(data.toString());
             this.process();
         });

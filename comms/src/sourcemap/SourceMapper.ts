@@ -1,7 +1,9 @@
 import {SourceMap} from './SourceMap';
 import {exec, ExecException} from 'child_process';
-import {WatCompiler} from '../manage/Compiler';
 import * as fs from 'fs';
+import {MappingItem, SourceMapConsumer} from 'source-map';
+import {CompileOutput} from '../manage/Compiler';
+import {getFileExtension} from '../util/util';
 import SourceLine = SourceMap.SourceLine;
 import Mapping = SourceMap.Mapping;
 import Closure = SourceMap.Closure;
@@ -51,7 +53,7 @@ export class WatMapper implements SourceMapper {
 
             const objDump = exec(this.getNameDumpCommand(), handleObjDumpStreams);
 
-            sourceMap = {lines: this.lineMapping, functions: [], globals: [], imports: []};
+            sourceMap = new SourceMap.Mapping().init(this.lineMapping, [], [], []);
             objDump.on('close', () => {
                 sourceMap.functions = functions;
                 sourceMap.globals = globals;
@@ -86,7 +88,7 @@ export class WatMapper implements SourceMapper {
         let regexpr = /^(?<address>([\da-f])+):/;
         let match = line.match(regexpr);
         if (match?.groups) {
-            return [{address: match.groups.address}];
+            return [{address: parseInt(match.groups.address, 16)}];
         }
 
         throw Error(`Could not parse address from line: ${line}`);
@@ -193,47 +195,31 @@ function extractImportInfo(line: String): Closure {
 // Maps Wasm to AS
 export class AsScriptMapper implements SourceMapper {
     private readonly sourceFile: string;
-    private readonly watFile: string;
     private readonly tmpdir: string;
-    private readonly wabt: string;
 
-    constructor(sourceFile: string, watFile: string, tmpdir: string, wabt: string) {
+    constructor(sourceFile: string, tmpdir: string) {
         this.sourceFile = sourceFile;
-        this.watFile = watFile;
-        this.wabt = wabt;
         this.tmpdir = tmpdir;
     }
 
     public mapping(): Promise<Mapping> {
+        const input = fs.readFileSync(`${this.tmpdir}/upload.wasm.map`)
+
         return new Promise((resolve, reject) => {
-            new WatCompiler(this.wabt).compile(this.watFile).then(output => new WatMapper(output.out ?? '', this.tmpdir, this.wabt).mapping()).then(mapping => {
-                mapping.lines = this.wasmAsScriptMapping(mapping.lines);
+            new SourceMapConsumer(input.toString()).then((consumer: SourceMapConsumer) => {
+                const mapping: Mapping = new SourceMap.Mapping().init([], [], [], []);
+                consumer.eachMapping(function (item: MappingItem) {
+                    mapping.lines.push({
+                        line: item.originalLine,
+                        columnStart: item.originalColumn,
+                        instructions: [{
+                            address: item.generatedColumn
+                        }],
+                        source: item.source
+                    })
+                });
                 resolve(mapping);
-            }).catch((error) => {
-                reject(error);
             });
         });
-    }
-
-    private wasmAsScriptMapping(wasmWatMap: SourceLine[]): SourceLine[] {
-        // Merge mappings
-        const merged: SourceLine[] = [];
-
-        fs.readFileSync(this.watFile).toString().split('\n').forEach((line, index) => {
-            if (!line.includes(this.sourceFile)) {
-                return;
-            }
-            const found = line.match(new RegExp(`;;@.*${this.sourceFile}:([0-9]*):([0-9]*)`));
-            if (found) {
-                const sourceLine: SourceLine | undefined = wasmWatMap.find(info => info.line === index);
-                merged.push({
-                    line: parseInt(found[1]),
-                    columnStart: parseInt(found[2]),
-                    columnEnd: parseInt(found[2]),
-                    instructions: sourceLine?.instructions ?? []
-                } as SourceLine);
-            }
-        });
-        return merged;
     }
 }

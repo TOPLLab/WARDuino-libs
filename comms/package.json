@@ -41,6 +41,7 @@
     "ieee754": "^1.2.1",
     "serialport": "^10.5.0",
     "sha512-crypt-ts": "^0.1.27",
+    "source-map": "^0.7.4",
     "typescript": "latest"
   },
   "devDependencies": {
