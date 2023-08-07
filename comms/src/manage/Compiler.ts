@@ -5,6 +5,14 @@ import {exec, ExecException} from 'child_process';
 import {SourceMap} from '../sourcemap/SourceMap';
 import * as readline from 'readline';
 import SourceLine = SourceMap.SourceLine;
+import {EventEmitter} from 'events';
+
+enum CompilationEvents {
+    started = 'started',
+    failed = 'failed',
+    sourcemap = 'sourcemap',
+    compiled = 'compiled'
+}
 
 export interface CompileOutput {
     dir: string; // the directory with compilation output
@@ -34,7 +42,7 @@ export class CompilerFactory {
     }
 }
 
-export abstract class Compiler {
+export abstract class Compiler extends EventEmitter {
     // compiles program to WAT
     abstract compile(program: string): Promise<CompileOutput>;
 
@@ -92,9 +100,11 @@ export class WatCompiler extends Compiler {
             }
 
             let compile = exec(command, handle);
+            this.emit(CompilationEvents.started, command);
 
             compile.on('close', (code) => {
                 if (code !== 0) {
+                    this.emit(CompilationEvents.failed, err);
                     reject(`Compilation to wasm failed: wat2wasm exited with code ${code}: ${err}`);
                     return;
                 }

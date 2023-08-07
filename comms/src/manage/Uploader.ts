@@ -5,10 +5,24 @@ import * as fs from 'fs';
 import * as net from 'net';
 import * as path from 'path';
 import {Connection, Serial, SubProcess} from '../bridge/Connection';
+import {EventEmitter} from 'events';
 
 export enum Platform {
     emulated,
     arduino
+}
+
+enum UploaderEvents {
+    compiled = 'compiled',
+    compiling = 'compiling',
+    connected = 'connected',
+    connecting = 'connecting',
+    failed = 'failed',
+    flashing = 'flashing',
+    staging = 'staging',
+    started = 'started',
+    uploaded = 'uploaded',
+    uploading = 'uploading',
 }
 
 export class UploaderFactory {
@@ -32,7 +46,7 @@ export class UploaderFactory {
 }
 
 
-export abstract class Uploader {
+export abstract class Uploader extends EventEmitter {
     abstract upload(program: string): Promise<Connection>;
 
     protected removeTmpDir(tmpdir: string): Promise<void> {
@@ -88,6 +102,8 @@ export class EmulatorUploader extends Uploader {
                 reject('Failed to start process.');
             }
 
+            that.emit(UploaderEvents.started);
+
             while (process.stdout === undefined) {
             }
 
@@ -102,12 +118,12 @@ export class EmulatorUploader extends Uploader {
                         listener(data);
                     }
 
-                    if (data.includes('Listening')) {
-                        console.log('ok');
+                    that.emit(UploaderEvents.connecting);
 
+                    if (data.includes('Listening')) {
                         const client = new net.Socket();
                         client.connect(that.port, () => {
-                            console.log('connected');
+                            that.emit(UploaderEvents.connected);
                             if (listener !== undefined) {
                                 client.on('data', listener);
                             }
@@ -123,9 +139,11 @@ export class EmulatorUploader extends Uploader {
                 });
 
                 reader.on('close', () => {
+                    that.emit(UploaderEvents.failed);
                     reject(`Could not connect. Error:  ${error}`);
                 });
             } else {
+                that.emit(UploaderEvents.failed);
                 reject();
             }
         });
@@ -148,16 +166,20 @@ export class ArduinoUploader extends Uploader {
     }
 
     public upload(program: string): Promise<Connection> {
+        this.emit(UploaderEvents.staging);
         return this.stage(program).then(() => {
             return this.removeTmpDir(path.dirname(program));
         }).then(() => {
+            this.emit(UploaderEvents.flashing);
             return this.flash();
         }).then(() => {
+            this.emit(UploaderEvents.connecting);
             return this.connect();
         });
     }
 
     private stage(program: string): Promise<void> {
+        const that = this;
         return new Promise<void>((resolve, reject) => {
             const command = `xxd -i ${program} | sed -e 's/[^ ]*_wasm/upload_wasm/g' > ${this.sdkpath}/upload.h`;
 
@@ -165,6 +187,7 @@ export class ArduinoUploader extends Uploader {
 
             createHeaders.on('close', (code) => {
                 if (code !== 0) {
+                    that.emit(UploaderEvents.failed);
                     reject('staging failed: unable to initialize headers');
                     return;
                 }
@@ -176,6 +199,7 @@ export class ArduinoUploader extends Uploader {
 
                 compile.on('close', (code) => {
                     if (code !== 0) {
+                        that.emit(UploaderEvents.failed);
                         reject('staging failed: unable to build Arduino program');
                         return;
                     }
@@ -186,6 +210,7 @@ export class ArduinoUploader extends Uploader {
     }
 
     private flash(): Promise<void> {
+        const that = this;
         return new Promise<void>((resolve, reject) => {
             const command = `make flash PORT=${this.options.path} FQBN=${this.fqbn}`;
 
@@ -193,6 +218,7 @@ export class ArduinoUploader extends Uploader {
 
             upload.on('close', (code) => {
                 if (code !== 0) {
+                    that.emit(UploaderEvents.failed);
                     reject(`unable to flash program to ${this.fqbn}`);
                     return;
                 }
@@ -202,10 +228,12 @@ export class ArduinoUploader extends Uploader {
     }
 
     private connect(): Promise<Connection> {
+        const that = this;
         return new Promise<Connection>((resolve, reject) => {
             const connection = new SerialPort(this.options,
                 (error) => {
                     if (error) {
+                        that.emit(UploaderEvents.failed);
                         reject(`could not connect to serial port: ${this.options.path}`);
                         return;
                     }
@@ -214,6 +242,7 @@ export class ArduinoUploader extends Uploader {
             connection.on('data', function (data) {
                 if (data.includes('LOADED')) {
                     connection.removeAllListeners('data');
+                    that.emit(UploaderEvents.connected);
                     resolve(new Serial(connection));
                 }
             });

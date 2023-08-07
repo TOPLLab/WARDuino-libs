@@ -3,10 +3,10 @@ import {Duplex} from 'stream';
 import {SerialPort} from 'serialport';
 import {MessageQueue} from '../parse/MessageQueue';
 import {Request} from '../parse/Requests';
-import { EventEmitter } from "stream";
+import {EventEmitter} from 'events';
 
-export class ConnectionEvents{
-    public static readonly onMessage: string = 'onMessage';
+enum ConnectionEvents {
+    OnMessage = 'message'
 }
 
 type PromiseResolver<R> = (value: R | PromiseLike<R>) => void;
@@ -46,10 +46,10 @@ export abstract class Connection extends EventEmitter {
                 // parse and resolve
                 const [candidate, resolver] = this.requests[index];
                 resolver(candidate.parser(message));
+                this.emit(ConnectionEvents.OnMessage, message);
+
                 this.requests.splice(index, 1);  // delete resolved request
             }
-    
-            this.emit(ConnectionEvents.onMessage, message);
         }
     }
 
