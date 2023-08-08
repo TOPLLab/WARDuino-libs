@@ -1,7 +1,8 @@
 import {command, program, Program} from 'bandersnatch';
-import {Request, WARDuino} from 'warduino-comms';
+import {Ack, Exception, Request, SourceMap, WARDuino, WASM} from 'warduino-comms';
 import {Debugger} from './debugger';
 import State = WARDuino.State;
+import Closure = SourceMap.Closure;
 
 const instances: Debugger[] = [];
 
@@ -49,6 +50,33 @@ const repl: Program = program({exit: false})
             .description('Get mapping')
             .action(async () => {
                 console.log(`${JSON.stringify(instances[0].mapping, null, 4)}`);
+            })
+    ).add(
+        command('location')
+            .description('Get current location')
+            .action(async () => {
+                const response: State = await instances[0].connection!.sendRequest(Request.dump);
+                console.log(`Current line: ${instances[0].mapping?.originalPosition({address: response.pc!})?.line}`);
+            })
+    ).add(
+        command('step')
+            .description('Get current location')
+            .action(async () => {
+                const response: Ack = await instances[0].connection!.sendRequest(Request.step);
+                console.log(`Stepping: ${response.text}`);
+            })
+    ).add(
+        command('invoke')
+            .description('Invoke a Wasm function')
+            .argument('name', {description: 'function name', type: 'string'})
+            .argument('args', {description: 'arguments for function', type: 'string', default: ''})
+            .action(async (args) => {
+                const closure = instances[0].mapping?.functions.find((closure: Closure) => closure.name === args.name);
+                const response: State | Exception = await instances[0].connection!.sendRequest(Request.invoke(closure?.index!, args.args.split(' ').map((arg: string) => {
+                    const elems: string[] = arg.split(':');
+                    return {type: WASM.typing.get(elems[0]) ?? WASM.Type.i32, value: +elems[1]} as WASM.Value;
+                })));
+                console.log(response);
             })
     ).add(
         command('exit')

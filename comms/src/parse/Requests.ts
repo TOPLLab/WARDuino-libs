@@ -1,11 +1,16 @@
 import {Instruction} from '../debug/Instructions';
 import {WARDuino} from '../debug/WARDuino';
-import {ackParser, breakpointParser, stateParser} from './Parsers';
+import {ackParser, breakpointParser, invokeParser, stateParser} from './Parsers';
 import {Breakpoint} from '../debug/Breakpoint';
+import {WASM} from '../sourcemap/Wasm';
+import ieee754 from 'ieee754';
 
 // An acknowledgement returned by the debugger
 export interface Ack {
-    ack: string
+    text: string
+}
+
+export interface Exception extends Ack {
 }
 
 // A request represents a debug message and its parser
@@ -17,6 +22,8 @@ export interface Request<R> {
 
 export namespace Request {
     import State = WARDuino.State;
+    import Value = WASM.Value;
+    import Type = WASM.Type;
     export const run: Request<Ack> = {
         instruction: Instruction.run,
         parser: (line: string) => {
@@ -113,9 +120,23 @@ export namespace Request {
         }
     }
 
-    export const invoke: Request<State> = {
-        instruction: Instruction.invoke,
-        parser: stateParser
+    export function invoke(fidx: number, args: Value[]): Request<State | Exception> {
+        let payload: string = WASM.leb128(fidx);
+        args.forEach((arg: Value) => {
+            if (arg.type === Type.i32 || arg.type === Type.i64) {
+                payload += WASM.leb128(arg.value);
+            } else {
+                const buff = Buffer.alloc(arg.type === Type.f32 ? 4 : 8);
+                ieee754.write(buff, arg.value, 0, true, 23, buff.length);
+                payload += buff.toString('hex');
+            }
+        });
+
+        return {
+            instruction: Instruction.invoke,
+            payload: payload,
+            parser: invokeParser
+        }
     }
 
     export const snapshot: Request<State> = {

@@ -1,6 +1,6 @@
 import {WASM} from '../sourcemap/Wasm';
 import * as ieee754 from 'ieee754';
-import {Ack} from './Requests';
+import {Ack, Exception} from './Requests';
 import {Breakpoint} from '../debug/Breakpoint';
 import {WARDuino} from '../debug/WARDuino';
 import State = WARDuino.State;
@@ -13,9 +13,20 @@ export function stateParser(text: string): State {
     return JSON.parse(text);
 }
 
+export function invokeParser(text: string): State | Exception {
+    if (exception(text)) {
+        return {text: text};
+    }
+    return stateParser(text);
+}
+
+function exception(text: string): boolean {
+    return text.trim()[0] !== "{" && !text.trim().includes('Interrupt');
+}
+
 export function ackParser(text: string, ack: string): Ack {
     if (text.toLowerCase().includes(ack.toLowerCase())) {
-        return {'ack': identityParser(text)};
+        return {'text': identityParser(text)};
     }
     throw Error(`No ack for ${ack}.`);
 }
@@ -23,7 +34,7 @@ export function ackParser(text: string, ack: string): Ack {
 export function breakpointParser(text: string): Breakpoint {
     const ack: Ack = ackParser(text, 'BP');
 
-    let breakpointInfo = ack.ack.match(/BP (0x.*)!/);
+    let breakpointInfo = ack.text.match(/BP (0x.*)!/);
     if (breakpointInfo!.length > 1) {
         return new Breakpoint(parseInt(breakpointInfo![1]), 0); // TODO address to line mapping
     }
