@@ -153,18 +153,29 @@ pub fn wifi_localip() -> String {
     }
 }
 
+const BUFFER_SIZE: usize = 250;
+
 /// Send an HTTP GET request.
-pub fn get(url: &str, buffer: &[u8]) -> i32 { unsafe { _get(url.as_ptr(), url.len(), buffer.as_ptr(), mem::size_of_val(buffer) / mem::size_of::<u8>()) } }
+pub fn get(url: &str) -> &str {
+    const BUFFER: &[u8; BUFFER_SIZE] = &[0; BUFFER_SIZE];
+    unsafe { 
+        _get(url.as_ptr(), url.len(), BUFFER.as_ptr(), mem::size_of_val(BUFFER) / mem::size_of::<u8>());
+        std::str::from_utf8_unchecked(BUFFER)
+    }
+}
 
 /// Send an HTTP POST request.
-pub fn post(options: &PostOptions, buffer: &[u8]) -> i32 {
+pub fn post(options: &PostOptions) -> &str {
+    const BUFFER: &[u8; BUFFER_SIZE] = &[0; BUFFER_SIZE];
     unsafe {
         _post(options.uri.as_ptr(), options.uri.len(),
               options.body.as_ptr(), options.body.len(),
               options.headers.content_type.as_ptr(), options.headers.content_type.len(),
               options.headers.authorization.as_ptr(), options.headers.authorization.len(),
-              buffer.as_ptr(), mem::size_of_val(buffer) / mem::size_of::<u8>())
+              BUFFER.as_ptr(), mem::size_of_val(BUFFER) / mem::size_of::<u8>());
+        std::str::from_utf8_unchecked(BUFFER)
     }
+
 }
 
 /// Print a string to the serial port.
@@ -226,5 +237,5 @@ pub fn mqtt_subscribe(topic: &str, f: fn(&str, &str, u32)) -> i32 { unsafe { _mq
 pub fn mqtt_unsubscribe(topic: &str, f: fn(&str, &str, u32)) -> i32 { unsafe { _mqtt_unsubscribe(topic.as_ptr(), topic.len(), f) } }
 
 /// Check for messages from the MQTT broker
-pub fn mqtt_loop() -> i32 { unsafe { _mqtt_loop() } }
+pub fn mqtt_poll() -> i32 { unsafe { _mqtt_loop() } }
 

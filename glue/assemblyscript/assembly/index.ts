@@ -76,6 +76,14 @@ export enum PinVoltage {
     HIGH = 1,
 }
 
+export function invert(mode: PinVoltage): PinVoltage {
+    if (mode === PinVoltage.LOW) {
+        return PinVoltage.HIGH;
+    } else {
+        return PinVoltage.LOW;
+    }
+}
+
 /** The mode of a pin interrupt. */
 export enum InterruptMode {
     /** Changing edge on a digital I/O pin */
@@ -93,6 +101,7 @@ export enum PinMode {
     /** Output mode for digital pins */
     OUTPUT = 0x2,
 }
+
 
 /** Configures the [PinMode] of the specified pin. */
 export function pinMode(pin: u32, mode: PinMode): void {
@@ -223,10 +232,12 @@ export namespace MQTT {
     }
 
     /**  Check for messages from the MQTT broker. */
-    function  loop(): i32 {
+    function  poll(): i32 {
         return ward._mqtt_loop();
     }
 }
+
+const buffersizeMaximum: u32 = 1000;
 
 export namespace HTTP {
     class PostOptions {
@@ -241,16 +252,20 @@ export namespace HTTP {
     }
 
     /** Send an HTTP GET request. The response is written to an ArrayBuffer. */
-    function get(url: string, response: ArrayBuffer): i32 {
-        return ward._http_get(String.UTF8.encode(url, true), String.UTF8.byteLength(url, true), response, response.byteLength);
+    function get(url: string): string {
+        const response: ArrayBuffer = new ArrayBuffer(buffersizeMaximum);
+        ward._http_get(String.UTF8.encode(url, true), String.UTF8.byteLength(url, true), response, response.byteLength);
+        return String.UTF8.decode(response);
     }
 
     /** Send an HTTP POST request. The response is written to an ArrayBuffer. */
-    function post(options: PostOptions, response: ArrayBuffer): i32 {
-        return ward._http_post(String.UTF8.encode(options.url, true), String.UTF8.byteLength(options.url, true),
+    function post(options: PostOptions): string {
+        const response: ArrayBuffer = new ArrayBuffer(buffersizeMaximum);
+        ward._http_post(String.UTF8.encode(options.url, true), String.UTF8.byteLength(options.url, true),
                           String.UTF8.encode(options.body, true), String.UTF8.byteLength(options.body, true),
                           String.UTF8.encode(options.content_type, true), String.UTF8.byteLength(options.content_type, true),
                           String.UTF8.encode(options.authorization, true), String.UTF8.byteLength(options.authorization, true),
                           response, response.byteLength);
+        return String.UTF8.decode(response);
     }
 }

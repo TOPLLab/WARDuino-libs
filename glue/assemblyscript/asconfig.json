@@ -5,18 +5,22 @@
   ],
   "targets": {
     "debug": {
-      "sourceMap": true,
       "debug": true,
-      "exportRuntime": true
+      "exportRuntime": true,
+      "outFile": "build/untouched.wasm"
     },
     "release": {
-      "sourceMap": false,
+      "outFile": "build/optimized.wasm",
       "optimizeLevel": 3,
       "shrinkLevel": 2,
       "exportRuntime": false,
       "runtime": "stub",
       "converge": true,
-      "noAssert": false,
+      "noAssert": false
+    }
+  },
+  "options": {
+      "sourceMap": true,
       "maximumMemory": 2,
       "disable": [
           "mutable-globals",
@@ -24,7 +28,5 @@
           "nontrapping-f2i",
           "bulk-memory"
       ]
-    }
-  },
-  "options": {}
+  }
 }

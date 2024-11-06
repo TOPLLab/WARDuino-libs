@@ -1,6 +1,6 @@
 {
   "name": "as-warduino",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "types": "assembly/index.ts",
   "license": "MPL-2.0",
   "author": "Team WARDuino <warduino@ugent.be>",
@@ -13,12 +13,12 @@
     "webassembly"
   ],
   "scripts": {
-    "asbuild:untouched": "npx asc assembly/index.ts -b build/untouched.wasm -t build/untouched.wat --sourceMap --debug",
-    "asbuild:optimized": "npx asc assembly/index.ts -b build/optimized.wasm -t build/optimized.wat --sourceMap --optimize",
-    "asbuild": "npm run asbuild:untouched && npm run asbuild:optimized",
+    "asbuild:debug": "npx asc --config asconfig.json --target debug",
+    "asbuild:release": "npx asc --config asconfig.json --disableWarning 235 --target release",
+    "asbuild": "npm run asbuild:debug && npm run asbuild:release",
     "prepublishOnly": "npm run asbuild"
   },
-  "devDependencies": {
+  "dependencies": {
     "assemblyscript": "latest"
   },
   "files": [
